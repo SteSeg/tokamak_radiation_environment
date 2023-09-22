@@ -234,5 +234,9 @@ settings.source = source
 settings.survival_biasing = False
 settings.batches = 100
 settings.particles = int(1e6)
+settings.output = {
+    'tallies': False,
+    'path': 'results'
+}
 
 settings.export_to_xml()
