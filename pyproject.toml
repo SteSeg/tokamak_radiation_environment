@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tre"
+name = "tokamak_radiation_environment"
 version = "0.0.1"
 authors = [
   { name="Stefano segantin", email="segantin@psfc.mit.edu" },
