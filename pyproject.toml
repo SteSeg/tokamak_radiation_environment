@@ -18,6 +18,9 @@ classifiers = [
 ]
 
 dependencies = [
+"numpy",
+"pandas",
+"openmc"
 ]
 
 [project.urls]
