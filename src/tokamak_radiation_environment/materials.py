@@ -1,10 +1,10 @@
 import openmc
 
 # PLASMA #############################
-dt_mixture = openmc.Material(name='dt-plasma')
-dt_mixture.add_nuclide('H2', 1.0)
-dt_mixture.add_nuclide('H3', 1.0)
-dt_mixture.set_density('g/cm3', 1e-5)
+dt_plasma = openmc.Material(name='dt_plasma')
+dt_plasma.add_nuclide('H2', 1.0)
+dt_plasma.add_nuclide('H3', 1.0)
+dt_plasma.set_density('g/cm3', 1e-5)
 
 # METALS - ALLOSY #####################
 
@@ -33,6 +33,14 @@ pbsn = openmc.Material(name='PbSn Solder')
 pbsn.add_element('Pb', 0.37, percent_type='wo')
 pbsn.add_element('Sn', 0.63, percent_type='wo')
 pbsn.set_density('g/cm3', 8.8)
+
+# SS-304
+ss304 = openmc.Material(name='ss304')
+ss304.add_element('Cr', 0.19, 'wo')
+ss304.add_element('Mn', 0.01, 'wo')
+ss304.add_element('Fe', 0.71, 'wo')
+ss304.add_element('Ni', 0.09, 'wo')
+ss304.set_density('g/cm3', 7.80)
 
 # Inconel 718 -
 inconel718 = openmc.Material(name='inconel718')
