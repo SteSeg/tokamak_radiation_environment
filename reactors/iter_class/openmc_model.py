@@ -1,7 +1,7 @@
 # %%
 import openmc
 import components_nodes as cn
-import math
+import tokamak_radiation_environment as tre
 # %%
 # define materials
 
