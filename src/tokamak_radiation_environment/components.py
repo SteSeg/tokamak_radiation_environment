@@ -317,49 +317,83 @@ class PFCoilCase(Component):
 
 
 class TFCoilMagnet(Component):
-    def __init__(self, nodes=None, centroid: float = None, height: float = None, radial_thickness: float = None, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, nodes, thickness: float, material: openmc.Material, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
         super().__init__()
 
         self.nodes = nodes
-        self.centroid = centroid
-        self.height = height
-        self.radial_thickness = radial_thickness
+        self.thickness = thickness
+        self.material = material
+        self.boundary_1 = boundary_1
+        self.boundary_2 = boundary_2
+
+    @property
+    def surfaces(self):
+
+        main_surface = openmc.model.Polygon(self.nodes, basis="rz")
+        lower_bound = openmc.YPlane(y0=-self.thickness/2)
+        upper_bound = openmc.YPlane(y0=self.thickness/2)
+        left_bound = openmc.XPlane(x0=0)
+
+        return main_surface, lower_bound, upper_bound, left_bound
+
+    @property
+    def region(self):
+
+        _region = -(self.surfaces[0]) & +(self.surfaces[1]
+                                          ) & -(self.surfaces[2]) & +(self.surfaces[3])
+
+        _region = _add_boundary_surfaces(
+            _region, self.boundary_1, self.boundary_2)
+
+        return _region
+
+    @property
+    def cell(self):
+
+        return openmc.Cell(region=self.region, fill=self.material)
+
+
+class TFCoilInsulation(Component):
+    def __init__(self, tf_coil_magnet: TFCoilMagnet, thickness: float, material: openmc.Material, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+        super().__init__()
+
+        self.tf_coil_magnet = tf_coil_magnet
+        self.thickness = thickness
+        self.material = material
         self.boundary_1 = boundary_1
         self.boundary_2 = boundary_2
 
     @property
     def surface(self):
-        pass
+
+        lb_y0 = self.tf_coil_magnet.surfaces[1].y0 - self.thickness
+        ub_y0 = self.tf_coil_magnet.surfaces[1].y0 + self.thickness
+
+        main_surface = self.tf_coil_magnet.surfaces[0].offset[self.thickness]
+        lower_bound = openmc.YPlane(y0=lb_y0)
+        upper_bound = openmc.YPlane(y0=ub_y0)
+        left_bound = openmc.XPlane(x0=0)
+
+        return main_surface, lower_bound, upper_bound, left_bound
 
     @property
     def region(self):
-        pass
+
+        _region = -(self.surfaces[0]) & +(self.surfaces[1]) & -(
+            self.surfaces[2]) & +(self.surfaces[3]) & ~(self.tf_coil_magnet.region)
+
+        _region = _add_boundary_surfaces(
+            _region, self.boundary_1, self.boundary_2)
+
+        return _region
 
     @property
     def cell(self):
-        pass
+        return openmc.Cell(region=self.region, fill=self.material)
 
 
 class TFCoilCase(Component):
     def __init__(self, plasma: Plasma, vacuum_vessel: VacuumVessel, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
-        super().__init__()
-        pass
-
-    @property
-    def surface(self):
-        pass
-
-    @property
-    def region(self):
-        pass
-
-    @property
-    def cell(self):
-        pass
-
-
-class TFCoilInsulation(Component):
-    def __init__(self, plasma: Plasma, vacuum_vessel: VacuumVessel, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
 
         super().__init__()
 
@@ -376,17 +410,17 @@ class TFCoilInsulation(Component):
         pass
 
 
-class NewComponent(ABC):
-    def __init__(self, nodes, material, exclude=None):
-        self.nodes = nodes
-        self.material = material
-        self.exclude = exclude
+# class NewComponent(ABC):
+#     def __init__(self, nodes, material, exclude=None):
+#         self.nodes = nodes
+#         self.material = material
+#         self.exclude = exclude
 
-    def surfaces(self):
-        pass
+#     def surfaces(self):
+#         pass
 
-    def region(self):
-        pass
+#     def region(self):
+#         pass
 
-    def cell(self):
-        pass
+#     def cell(self):
+#         pass

@@ -50,8 +50,8 @@ enclosure_cell = openmc.Cell(region=enclosure_region, fill=None)
 
 # surfaces
 
-geometry = openmc.Geometry(
-    [plasma.cell, vacuum_vessel.cell, sol.cell, blanket.cell, shield.cell, enclosure_cell])
+geometry = openmc.Geometry([plasma.cell, vacuum_vessel.cell, sol.cell,
+                           blanket.cell, shield.cell, enclosure_cell], merge_surfaces=True)
 
 geometry.export_to_xml()
 
