@@ -1,6 +1,7 @@
 # %%
 import openmc
 import math
+import numpy as np
 import components_nodes as cn
 import tokamak_radiation_environment as tre
 # %%
@@ -19,8 +20,6 @@ hastelloy = tre.materials.hastelloy_c276
 
 materials = openmc.Materials(
     [dt_plasma, flibe, wc, eurofer, ss304, nb3sn, fiberglass, hastelloy])
-
-materials.export_to_xml()
 
 # %%
 
@@ -98,8 +97,55 @@ pf_l3_insulation = tre.components.PFCoilInsulation(
 pf_l3_case = tre.components.PFCoilCase(pf_coil_magnet=pf_l3_magnet, pf_coil_insulation=pf_l3_insulation,
                                        thickness=14, material=hastelloy, boundary_1=reflective_lower, boundary_2=reflective_upper)
 
-reactor_components = [plasma, sol, vacuum_vessel, blanket,
-                      shield, pf_u1_magnet, pf_u1_insulation, pf_u1_case, pf_u2_magnet, pf_u2_insulation, pf_u2_case, pf_u3_magnet, pf_u3_insulation, pf_u3_case,
+
+# central solenoid
+cs_u1_magnet = tre.components.PFCoilMagnet(centroid=[
+                                           167, 100], height=160, radial_thickness=40, material=nb3sn, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_u1_insulation = tre.components.PFCoilInsulation(
+    pf_coil_magnet=cs_u1_magnet, thickness=10, material=fiberglass, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_u1_case = tre.components.PFCoilCase(pf_coil_magnet=cs_u1_magnet, pf_coil_insulation=cs_u1_insulation,
+                                       thickness=10, material=hastelloy, boundary_1=reflective_lower, boundary_2=reflective_upper)
+
+cs_u2_magnet = tre.components.PFCoilMagnet(centroid=[
+                                           167, 300], height=160, radial_thickness=40, material=nb3sn, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_u2_insulation = tre.components.PFCoilInsulation(
+    pf_coil_magnet=cs_u2_magnet, thickness=10, material=fiberglass, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_u2_case = tre.components.PFCoilCase(pf_coil_magnet=cs_u2_magnet, pf_coil_insulation=cs_u2_insulation,
+                                       thickness=10, material=hastelloy, boundary_1=reflective_lower, boundary_2=reflective_upper)
+
+cs_u3_magnet = tre.components.PFCoilMagnet(centroid=[
+                                           167, 500], height=160, radial_thickness=40, material=nb3sn, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_u3_insulation = tre.components.PFCoilInsulation(
+    pf_coil_magnet=cs_u3_magnet, thickness=10, material=fiberglass, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_u3_case = tre.components.PFCoilCase(pf_coil_magnet=cs_u3_magnet, pf_coil_insulation=cs_u3_insulation,
+                                       thickness=10, material=hastelloy, boundary_1=reflective_lower, boundary_2=reflective_upper)
+
+cs_l1_magnet = tre.components.PFCoilMagnet(centroid=[
+                                           167, -100], height=160, radial_thickness=40, material=nb3sn, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_l1_insulation = tre.components.PFCoilInsulation(
+    pf_coil_magnet=cs_l1_magnet, thickness=10, material=fiberglass, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_l1_case = tre.components.PFCoilCase(pf_coil_magnet=cs_l1_magnet, pf_coil_insulation=cs_l1_insulation,
+                                       thickness=10, material=hastelloy, boundary_1=reflective_lower, boundary_2=reflective_upper)
+
+cs_l2_magnet = tre.components.PFCoilMagnet(centroid=[
+                                           167, -300], height=160, radial_thickness=40, material=nb3sn, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_l2_insulation = tre.components.PFCoilInsulation(
+    pf_coil_magnet=cs_l2_magnet, thickness=10, material=fiberglass, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_l2_case = tre.components.PFCoilCase(pf_coil_magnet=cs_l2_magnet, pf_coil_insulation=cs_l2_insulation,
+                                       thickness=10, material=hastelloy, boundary_1=reflective_lower, boundary_2=reflective_upper)
+
+cs_l3_magnet = tre.components.PFCoilMagnet(centroid=[
+                                           167, -500], height=160, radial_thickness=40, material=nb3sn, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_l3_insulation = tre.components.PFCoilInsulation(
+    pf_coil_magnet=cs_l3_magnet, thickness=10, material=fiberglass, boundary_1=reflective_lower, boundary_2=reflective_upper)
+cs_l3_case = tre.components.PFCoilCase(pf_coil_magnet=cs_l3_magnet, pf_coil_insulation=cs_l3_insulation,
+                                       thickness=10, material=hastelloy, boundary_1=reflective_lower, boundary_2=reflective_upper)
+
+
+reactor_components = [plasma, sol, vacuum_vessel, blanket, shield,
+                      cs_u1_magnet, cs_u1_insulation, cs_u1_case, cs_u2_magnet, cs_u2_insulation, cs_u2_case, cs_u3_magnet, cs_u3_insulation, cs_u3_case,
+                      cs_l1_magnet, cs_l1_insulation, cs_l1_case, cs_l2_magnet, cs_l2_insulation, cs_l2_case, cs_l3_magnet, cs_l3_insulation, cs_l3_case,
+                      pf_u1_magnet, pf_u1_insulation, pf_u1_case, pf_u2_magnet, pf_u2_insulation, pf_u2_case, pf_u3_magnet, pf_u3_insulation, pf_u3_case,
                       pf_l1_magnet, pf_l1_insulation, pf_l1_case, pf_l2_magnet, pf_l2_insulation, pf_l2_case, pf_l3_magnet, pf_l3_insulation, pf_l3_case,
                       tf_coil_magnet, tf_coil_insulation, tf_coil_case]
 
@@ -112,19 +158,17 @@ enclosure_cell = openmc.Cell(region=enclosure_region, fill=None)
 
 # surfaces
 
-geometry = openmc.Geometry(root=[plasma.cell, vacuum_vessel.cell, sol.cell,
-                           blanket.cell, shield.cell, pf_u1_magnet.cell, pf_u1_insulation.cell,
-                           pf_u1_case.cell, pf_u2_magnet.cell, pf_u2_insulation.cell, pf_u2_case.cell,
-                           pf_u3_magnet.cell, pf_u3_insulation.cell, pf_u3_case.cell, pf_l1_magnet.cell,
-                           pf_l1_insulation.cell, pf_l1_case.cell, pf_l2_magnet.cell, pf_l2_insulation.cell,
-                           pf_l2_case.cell, pf_l3_magnet.cell, pf_l3_insulation.cell, pf_l3_case.cell,
-                           tf_coil_magnet.cell, tf_coil_insulation.cell, tf_coil_case.cell,
-                           enclosure_cell])
+geometry = openmc.Geometry(root=[plasma.cell, vacuum_vessel.cell, sol.cell, blanket.cell, shield.cell,
+                                 cs_u1_magnet.cell, cs_u1_insulation.cell, cs_u1_case.cell, cs_u2_magnet.cell, cs_u2_insulation.cell, cs_u2_case.cell,
+                                 cs_u3_magnet.cell, cs_u3_insulation.cell, cs_u3_case.cell, cs_l1_magnet.cell, cs_l1_insulation.cell, cs_l1_case.cell,
+                                 cs_l2_magnet.cell, cs_l2_insulation.cell, cs_l2_case.cell, cs_l3_magnet.cell, cs_l3_insulation.cell, cs_l3_case.cell,
+                                 pf_u1_magnet.cell, pf_u1_insulation.cell, pf_u1_case.cell, pf_u2_magnet.cell, pf_u2_insulation.cell, pf_u2_case.cell,
+                                 pf_u3_magnet.cell, pf_u3_insulation.cell, pf_u3_case.cell, pf_l1_magnet.cell, pf_l1_insulation.cell, pf_l1_case.cell,
+                                 pf_l2_magnet.cell, pf_l2_insulation.cell, pf_l2_case.cell, pf_l3_magnet.cell, pf_l3_insulation.cell, pf_l3_case.cell,
+                                 tf_coil_magnet.cell, tf_coil_insulation.cell, tf_coil_case.cell,
+                                 enclosure_cell])
 
 geometry.merge_surfaces = True
-
-geometry.export_to_xml()
-
 
 # %%
 
@@ -140,7 +184,7 @@ source = openmc.Source()
 source.particle = 'neutron'
 radius = openmc.stats.Discrete([620], [1])
 z_values = openmc.stats.Discrete([0], [1])
-angle = openmc.stats.Uniform(a=math.radians(0), b=math.radians(360))
+angle = openmc.stats.Uniform(a=math.radians(-10), b=math.radians(10))
 source.space = openmc.stats.CylindricalIndependent(
     r=radius, phi=angle, z=z_values, origin=(0., 0., 0.))
 source.angle = openmc.stats.Isotropic()
@@ -149,12 +193,46 @@ source.energy = openmc.stats.Discrete(14.1e6, 1)
 # settings' settings
 # weight windows from wwinp
 settings.source = source
-settings.survival_biasing = False
+settings.photon_transport = False
 settings.batches = 100
-settings.particles = int(1e6)
-settings.output = {
-    'tallies': False,
-    'path': 'results'
-}
+settings.particles = int(1e2)
+settings.output = {'tallies': False}
 
-settings.export_to_xml()
+# %%
+
+# filters
+particle_filter = openmc.ParticleFilter(
+    ['neutron', 'photon', 'electron', 'positron'])
+
+# mesh
+mesh = openmc.CylindricalMesh()
+mesh.r_grid = np.arange(122, 1172, 6)  # 175 steps
+mesh.z_grid = np.arange(-700, 700, 10)  # 140 steps
+mesh.phi_grid = np.linspace(math.radians(-10), math.radians(10), 1)
+mesh.origin = (0., 0., 0.)
+mesh_filter = openmc.MeshFilter(mesh)
+
+# energyfilter
+tripoli315 = openmc.mgxs.GROUP_STRUCTURES['TRIPOLI-315']
+energy_filter = openmc.EnergyFilter(tripoli315)
+
+# tallies
+# cell tally - flux at detector
+tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
+tally1.filters = [particle_filter, mesh_filter]
+tally1.scores = ["flux"]
+
+# cell tally - flux at detector
+tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
+tally2.filters = [particle_filter, mesh_filter]
+tally2.scores = ["heating"]
+
+tallies = openmc.Tallies([tally1, tally2])
+
+
+# %%
+
+model = openmc.Model(materials=materials, geometry=geometry,
+                     settings=settings, tallies=None)
+
+model.run(geometry_debug=True)
