@@ -241,9 +241,9 @@ fiberglass.add_element('Fe', 0.002739, percent_type='wo')
 fiberglass.set_density('g/cm3', 2.57)
 
 # Nb3Sn - LTS
-ybco = openmc.Material(name='ybco')
-ybco.add_elements_from_formula('Nb3Sn')
-ybco.set_density('g/cm3', 8.74)
+nb3sn = openmc.Material(name='ybco')
+nb3sn.add_elements_from_formula('Nb3Sn')
+nb3sn.set_density('g/cm3', 8.74)
 
 # YBCO - HTS
 ybco = openmc.Material(name='ybco')
