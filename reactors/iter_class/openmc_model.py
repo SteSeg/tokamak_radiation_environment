@@ -17,10 +17,9 @@ wc = tre.materials.wc
 
 nb3sn = tre.materials.nb3sn
 fiberglass = tre.materials.fiberglass
-hastelloy = tre.materials.hastelloy_c276
 
 materials = openmc.Materials(
-    [dt_plasma, flibe, wc, eurofer, ss304, nb3sn, fiberglass, hastelloy])
+    [dt_plasma, flibe, wc, eurofer, ss304, nb3sn, fiberglass, ss316L])
 
 # %%
 
@@ -197,7 +196,7 @@ source.energy = openmc.stats.muir(e0=14.08e6, m_rat=5, kt=20000)
 settings.source = source
 settings.photon_transport = False
 settings.batches = 100
-settings.particles = int(1e2)
+settings.particles = int(1e6)
 settings.output = {'tallies': False}
 
 # %%
@@ -238,7 +237,7 @@ tally2.scores = ["heating"]
 # mesh tally - gas production
 tally3 = openmc.Tally(tally_id=3, name="heating_mesh")
 tally3.filters = [mesh_filter]
-tally3.scores = ["H1-production", "H2-production", "H3-production"
+tally3.scores = ["H1-production", "H2-production", "H3-production",
                  "He3-production", "He4-production"]
 
 tallies = openmc.Tallies([tally1, tally2, tally3])
