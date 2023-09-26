@@ -42,6 +42,15 @@ ss304.add_element('Fe', 0.71, 'wo')
 ss304.add_element('Ni', 0.09, 'wo')
 ss304.set_density('g/cm3', 7.80)
 
+# SS-316L
+ss316L = openmc.Material(name='ss316L')
+ss316L.add_element('Cr', 0.166, 'wo')
+ss316L.add_element('Mo', 0.02, 'wo')
+ss316L.add_element('Mn', 0.002, 'wo')
+ss316L.add_element('Fe', 0.712, 'wo')
+ss316L.add_element('Ni', 0.1, 'wo')
+ss316L.set_density('g/cm3', 7.80)
+
 # Inconel 718 -
 inconel718 = openmc.Material(name='inconel718')
 inconel718.add_element('Ni', 53.0, 'wo')
