@@ -1,10 +1,10 @@
 import openmc
 
 # PLASMA #############################
-dt_mixture = openmc.Material(name='dt-plasma')
-dt_mixture.add_nuclide('H2', 1.0)
-dt_mixture.add_nuclide('H3', 1.0)
-dt_mixture.set_density('g/cm3', 1e-5)
+dt_plasma = openmc.Material(name='dt_plasma')
+dt_plasma.add_nuclide('H2', 1.0)
+dt_plasma.add_nuclide('H3', 1.0)
+dt_plasma.set_density('g/cm3', 1e-5)
 
 # METALS - ALLOSY #####################
 
@@ -33,6 +33,23 @@ pbsn = openmc.Material(name='PbSn Solder')
 pbsn.add_element('Pb', 0.37, percent_type='wo')
 pbsn.add_element('Sn', 0.63, percent_type='wo')
 pbsn.set_density('g/cm3', 8.8)
+
+# SS-304
+ss304 = openmc.Material(name='ss304')
+ss304.add_element('Cr', 0.19, 'wo')
+ss304.add_element('Mn', 0.01, 'wo')
+ss304.add_element('Fe', 0.71, 'wo')
+ss304.add_element('Ni', 0.09, 'wo')
+ss304.set_density('g/cm3', 7.80)
+
+# SS-316L
+ss316L = openmc.Material(name='ss316L')
+ss316L.add_element('Cr', 0.166, 'wo')
+ss316L.add_element('Mo', 0.02, 'wo')
+ss316L.add_element('Mn', 0.002, 'wo')
+ss316L.add_element('Fe', 0.712, 'wo')
+ss316L.add_element('Ni', 0.1, 'wo')
+ss316L.set_density('g/cm3', 7.80)
 
 # Inconel 718 -
 inconel718 = openmc.Material(name='inconel718')
@@ -233,9 +250,9 @@ fiberglass.add_element('Fe', 0.002739, percent_type='wo')
 fiberglass.set_density('g/cm3', 2.57)
 
 # Nb3Sn - LTS
-ybco = openmc.Material(name='ybco')
-ybco.add_elements_from_formula('Nb3Sn')
-ybco.set_density('g/cm3', 8.74)
+nb3sn = openmc.Material(name='ybco')
+nb3sn.add_elements_from_formula('Nb3Sn')
+nb3sn.set_density('g/cm3', 8.74)
 
 # YBCO - HTS
 ybco = openmc.Material(name='ybco')
