@@ -176,11 +176,6 @@ geometry.merge_surfaces = True
 
 # %%
 # settings
-
-settings = openmc.Settings()
-
-settings.photon_transport = False
-settings.run_mode = 'fixed source'
 # source definition
 source = openmc.Source()
 source.particle = 'neutron'
@@ -193,8 +188,9 @@ source.angle = openmc.stats.Isotropic()
 source.energy = openmc.stats.muir(e0=14.08e6, m_rat=5, kt=20000)
 
 # settings' settings
-settings.source = source
+settings = openmc.Settings(run_mode='fixed source')
 settings.photon_transport = False
+settings.source = source
 settings.batches = 100
 settings.particles = int(1e6)
 settings.output = {'tallies': False}
@@ -206,18 +202,19 @@ particle_filter = openmc.ParticleFilter(
     ['neutron', 'photon', 'electron', 'positron'])
 
 # mesh
-
+# regular mesh
 mesh = openmc.RegularMesh()
 mesh.dimension = [175, 66, 140]
 mesh.lower_left = [122, -165, -700]
 mesh.upper_right = [1178, 165, 700]
-
-# mesh = openmc.CylindricalMesh()
-# mesh.r_grid = np.arange(122, 1178, 6)  # 175 steps
-# mesh.z_grid = np.arange(-700, 710, 10)  # 140 steps
-# mesh.phi_grid = (0, math.radians(360))
-# mesh.origin = (0., 0., 0.)
-mesh_filter = openmc.MeshFilter(mesh)
+globalmesh_filter = openmc.MeshFilter(mesh)
+# cylindrical mesh
+mesh = openmc.CylindricalMesh()
+mesh.r_grid = [267, 272]
+mesh.z_grid = [-2.5, 2.5]
+mesh.phi_grid = (0, math.radians(360))
+mesh.origin = (0., 0., 0.)
+localmesh_filter = openmc.MeshFilter(mesh)
 
 # energyfilter
 tripoli315 = openmc.mgxs.GROUP_STRUCTURES['TRIPOLI-315']
@@ -226,21 +223,26 @@ energy_filter = openmc.EnergyFilter(tripoli315)
 # tallies
 # mesh tally - flux
 tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
-tally1.filters = [particle_filter, mesh_filter]
+tally1.filters = [particle_filter, globalmesh_filter]
 tally1.scores = ["flux"]
 
 # mesh tally - heating
 tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
-tally2.filters = [particle_filter, mesh_filter]
+tally2.filters = [particle_filter, globalmesh_filter]
 tally2.scores = ["heating"]
 
 # mesh tally - gas production
 tally3 = openmc.Tally(tally_id=3, name="heating_mesh")
-tally3.filters = [mesh_filter]
+tally3.filters = [globalmesh_filter]
 tally3.scores = ["H1-production", "H2-production", "H3-production",
                  "He3-production", "He4-production"]
 
-tallies = openmc.Tallies([tally1, tally2, tally3])
+# mesh tally - flux
+tally4 = openmc.Tally(tally_id=4, name="nflux_mesh")
+tally4.filters = [particle_filter, localmesh_filter, energy_filter]
+tally4.scores = ["flux"]
+
+tallies = openmc.Tallies([tally1, tally2, tally3, tally4])
 
 
 # %%

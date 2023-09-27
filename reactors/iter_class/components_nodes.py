@@ -96,15 +96,15 @@ def _mirror_around_x(component, append: bool = False):
 plasma_out = _mirror_around_x(_plasma_out, append=True)
 vessel_in = _mirror_around_x(_vessel_in, append=True)
 tf_in = _mirror_around_x(_tf_in, append=True)
-pf_u1 = _pf_u1
-pf_u2 = _pf_u2
-pf_u3 = _pf_u3
-pf_l1 = _mirror_around_x(pf_u1)
-pf_l2 = _mirror_around_x(pf_u2)
-pf_l3 = _mirror_around_x(pf_u3)
-cs_u1 = _cs_u1
-cs_u2 = _cs_u2
-cs_u3 = _cs_u3
-cs_l1 = _mirror_around_x(_cs_u1)
-cs_l2 = _mirror_around_x(_cs_u2)
-cs_l3 = _mirror_around_x(_cs_u3)
+# pf_u1 = _pf_u1
+# pf_u2 = _pf_u2
+# pf_u3 = _pf_u3
+# pf_l1 = _mirror_around_x(pf_u1)
+# pf_l2 = _mirror_around_x(pf_u2)
+# pf_l3 = _mirror_around_x(pf_u3)
+# cs_u1 = _cs_u1
+# cs_u2 = _cs_u2
+# cs_u3 = _cs_u3
+# cs_l1 = _mirror_around_x(_cs_u1)
+# cs_l2 = _mirror_around_x(_cs_u2)
+# cs_l3 = _mirror_around_x(_cs_u3)
