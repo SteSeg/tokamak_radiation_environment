@@ -29,17 +29,27 @@ class Component(ABC):
 
 
 class Plasma(Component):
-    def __init__(self, nodes, material: openmc.Material = None, surf_offset=0., boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, nodes, material: openmc.Material = None, surf_offset=0., angle=None):
 
         self.nodes = nodes
         self.material = material
         self.surf_offset = surf_offset
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
-        return openmc.model.Polygon(self.nodes, basis="rz").offset(self.surf_offset)
+        main_surf = openmc.model.Polygon(
+            self.nodes, basis="rz").offset(self.surf_offset)
+
+        lower_bound = None
+        upper_bound = None
+        if self.angle:
+            lower_bound = openmc.YPlane(
+                y0=0, boundary_type='reflective').rotate([0, 0, self.angle[0]])
+            upper_bound = openmc.YPlane(
+                y0=0, boundary_type='reflective').rotate([0, 0, self.angle[1]])
+
+        return main_surf, lower_bound, upper_bound
 
     @property
     def region(self):
@@ -454,10 +464,9 @@ class TFCoilCase(Component):
 
 
 # class NewComponent(ABC):
-#     def __init__(self, nodes, material, exclude=None):
+#     def __init__(self, nodes, material):
 #         self.nodes = nodes
 #         self.material = material
-#         self.exclude = exclude
 
 #     def surfaces(self):
 #         pass

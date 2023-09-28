@@ -7,4 +7,5 @@
 - rework on the radial build
 
 
-## MIT-Reactor model?
+## src
+- components: from lower and upper bound set directly angle

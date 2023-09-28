@@ -47,7 +47,7 @@ shield = tre.components.Shield(blanket=blanket, thickness=30, material=ss304,
 
 # tf coil
 tf_coil_magnet = tre.components.TFCoilMagnet(
-    nodes=cn._tf_in, thickness=25, material=nb3sn, boundary_1=reflective_lower, boundary_2=reflective_upper)
+    nodes=cn.tf_in, thickness=25, material=nb3sn, boundary_1=reflective_lower, boundary_2=reflective_upper)
 tf_coil_insulation = tre.components.TFCoilInsulation(
     tf_coil_magnet=tf_coil_magnet, thickness=18, material=fiberglass, boundary_1=reflective_lower, boundary_2=reflective_upper)
 tf_coil_case = tre.components.TFCoilCase(
@@ -238,7 +238,7 @@ tally3.scores = ["H1-production", "H2-production", "H3-production",
                  "He3-production", "He4-production"]
 
 # mesh tally - flux
-tally4 = openmc.Tally(tally_id=4, name="nflux_mesh")
+tally4 = openmc.Tally(tally_id=4, name="nflux_mesh_spectrum")
 tally4.filters = [particle_filter, localmesh_filter, energy_filter]
 tally4.scores = ["flux"]
 
