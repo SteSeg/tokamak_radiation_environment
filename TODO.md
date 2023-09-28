@@ -7,5 +7,8 @@
 - rework on the radial build
 
 
-## src
-- components: from lower and upper bound set directly angle
+## components
+- tf coil able to be replicated
+- blanket can have an outer polygon
+- shield can have an outer polygon
+- tf coil can have an outer polygon
