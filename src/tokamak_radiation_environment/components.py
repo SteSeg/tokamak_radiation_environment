@@ -32,9 +32,9 @@ class Component(ABC):
 
 
 class Plasma(Component):
-    def __init__(self, nodes, material: openmc.Material = None, surf_offset=0., angle=None):
+    def __init__(self, outer_nodes, material: openmc.Material = None, surf_offset=0., angle=None):
 
-        self.nodes = nodes
+        self.outer_nodes = outer_nodes
         self.material = material
         self.surf_offset = surf_offset
         self.angle = angle
@@ -42,7 +42,7 @@ class Plasma(Component):
     @property
     def surfaces(self):
         main_surf = openmc.model.Polygon(
-            self.nodes, basis="rz").offset(self.surf_offset)
+            self.outer_nodes, basis="rz").offset(self.surf_offset)
 
         return main_surf
 
@@ -62,10 +62,10 @@ class Plasma(Component):
 
 
 class VacuumVessel(Component):
-    def __init__(self, nodes, thickness: float, material: openmc.Material, angle=None):
+    def __init__(self, inner_nodes, thickness: float, material: openmc.Material, angle=None):
         super().__init__()
 
-        self.nodes = nodes
+        self.inner_nodes = inner_nodes
         self.thickness = thickness
         self.material = material
         self.angle = angle
@@ -74,9 +74,9 @@ class VacuumVessel(Component):
     def surfaces(self):
 
         inner_surface = openmc.model.Polygon(
-            self.nodes, basis="rz")
+            self.inner_nodes, basis="rz")
         outer_surface = openmc.model.Polygon(
-            self.nodes, basis="rz").offset(self.thickness)
+            self.inner_nodes, basis="rz").offset(self.thickness)
 
         return inner_surface, outer_surface
 
@@ -203,29 +203,17 @@ class Shield(Component):
 
 
 class PFCoilMagnet(Component):
-    def __init__(self, centroid, height: float, radial_thickness: float, material: openmc.Material, angle=None):
+    def __init__(self, nodes, material: openmc.Material, angle=None):
         super().__init__()
 
-        self.centroid = centroid
-        self.height = height
-        self.radial_thickness = radial_thickness
+        self.nodes = nodes
         self.material = material
         self.angle = angle
 
     @property
     def surfaces(self):
 
-        lower_left = [self.centroid[0]-self.radial_thickness /
-                      2, self.centroid[1]-self.height/2]
-        lower_right = [self.centroid[0]+self.radial_thickness /
-                       2, self.centroid[1]-self.height/2]
-        upper_right = [self.centroid[0]+self.radial_thickness /
-                       2, self.centroid[1]+self.height/2]
-        upper_left = [self.centroid[0]-self.radial_thickness /
-                      2, self.centroid[1]+self.height/2]
-        nodes = [lower_left, lower_right, upper_right, upper_left]
-
-        return openmc.model.Polygon(nodes, basis="rz")
+        return openmc.model.Polygon(self.nodes, basis="rz")
 
     @property
     def region(self):
@@ -307,10 +295,10 @@ class PFCoilCase(Component):
 
 
 class TFCoilMagnet(Component):
-    def __init__(self, nodes, thickness: float, material: openmc.Material, angle=None):
+    def __init__(self, inner_nodes, thickness: float, material: openmc.Material, angle=None):
         super().__init__()
 
-        self.nodes = nodes
+        self.inner_nodes = inner_nodes
         self.thickness = thickness
         self.material = material
         self.angle = angle
@@ -318,9 +306,9 @@ class TFCoilMagnet(Component):
     @property
     def surfaces(self):
 
-        main_surface_in = openmc.model.Polygon(self.nodes, basis="rz")
+        main_surface_in = openmc.model.Polygon(self.inner_nodes, basis="rz")
         main_surface_out = openmc.model.Polygon(
-            self.nodes, basis="rz").offset(self.thickness)
+            self.inner_nodes, basis="rz").offset(self.thickness)
         lower_bound = openmc.YPlane(y0=-self.thickness)
         upper_bound = openmc.YPlane(y0=self.thickness)
         left_bound = openmc.XPlane(x0=0)
@@ -435,3 +423,61 @@ class TFCoilCase(Component):
     def cell(self):
 
         return openmc.Cell(region=self.region, fill=self.material)
+
+
+def core_group(plasma_outer_nodes, plasma_material: openmc.Material,
+               vessel_inner_nodes, vessel_thickness: float, vessel_material: openmc.Material,
+               blanket_thickness: float, blanket_material: openmc.Material,
+               shield_thickness: float, shield_material: openmc.Material,
+               angle=None):
+
+    plasma = Plasma(outer_nodes=plasma_outer_nodes,
+                    material=plasma_material, angle=angle)
+
+    vacuum_vessel = VacuumVessel(inner_nodes=vessel_inner_nodes, thickness=vessel_thickness,
+                                 material=vessel_material, angle=angle)
+
+    sol = SOLVacuum(
+        plasma=plasma, vacuum_vessel=vacuum_vessel, angle=angle)
+
+    blanket = Blanket(vacuum_vessel=vacuum_vessel, thickness=blanket_thickness,
+                      material=blanket_material, angle=angle)
+
+    shield = Shield(blanket=blanket, thickness=shield_thickness,
+                    material=shield_material, angle=angle)
+
+    return plasma, sol, vacuum_vessel, blanket, shield
+
+
+def pfcoil_group(magnet_nodes, magnet_material: openmc.Material,
+                 insulation_thickness: float, insulation_material: openmc.Material,
+                 case_thickness: float, case_material: openmc.Material,
+                 angle=None):
+
+    pf_magnet = PFCoilMagnet(
+        nodes=magnet_nodes, material=magnet_material, angle=angle)
+
+    pf_insulation = PFCoilInsulation(pf_coil_magnet=pf_magnet,
+                                     thickness=insulation_thickness,
+                                     material=insulation_material, angle=angle)
+    pf_case = PFCoilCase(pf_coil_magnet=pf_magnet, pf_coil_insulation=pf_insulation,
+                         thickness=case_thickness, material=case_material, angle=angle)
+
+    return pf_magnet, pf_insulation, pf_case
+
+
+def tfcoil_group(magnet_inner_nodes, magnet_thickness: float, magnet_material: openmc.Material,
+                 insulation_thickness: float, insulation_material: openmc.Material,
+                 case_thickness: float, case_material: openmc.Material,
+                 angle=None):
+
+    tf_coil_magnet = TFCoilMagnet(inner_nodes=magnet_inner_nodes, thickness=magnet_thickness,
+                                  material=magnet_material, angle=angle)
+
+    tf_coil_insulation = TFCoilInsulation(tf_coil_magnet=tf_coil_magnet, thickness=insulation_thickness,
+                                          material=insulation_material, angle=angle)
+
+    tf_coil_case = TFCoilCase(tf_coil_magnet=tf_coil_magnet, tf_coil_insulation=tf_coil_insulation,
+                              thickness=case_thickness, material=case_material, angle=angle)
+
+    return tf_coil_magnet, tf_coil_insulation, tf_coil_case

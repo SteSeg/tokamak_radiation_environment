@@ -1,4 +1,4 @@
-plasma_out = [
+plasma_out = (
     [820, 0],
     [798, 105],
     [772, 178],
@@ -21,9 +21,9 @@ plasma_out = [
     [720, -243],
     [772, -178],
     [798, -105]
-]
+)
 
-vessel_in = [
+vessel_in = (
     [840, 0],
     [836, 80],
     [813, 162],
@@ -46,9 +46,9 @@ vessel_in = [
     [768, -246],
     [813, -162],
     [836, -80]
-]
+)
 
-tf_in = [
+tf_in = (
     [1050.,  118.],
     [1000.,  238.],
     [947.,  358.],
@@ -73,8 +73,91 @@ tf_in = [
     [947.0, -358.0],
     [1000.0, -238.0],
     [1050.0, -118.0]
-]
+)
 
+pf_u1 = (
+    [1165, 195],
+    [1165, 225],
+    [1135, 225],
+    [1135, 195]
+)
+
+pf_u2 = (
+    [882, 570],
+    [882, 590],
+    [858, 590],
+    [858, 570]
+)
+
+pf_u3 = (
+    [422, 630],
+    [422, 670],
+    [388, 670],
+    [388, 630]
+)
+
+pf_l1 = (
+    [1165, -195],
+    [1165, -225],
+    [1135, -225],
+    [1135, -195]
+)
+
+pf_l2 = (
+    [882, -570],
+    [882, -590],
+    [858, -590],
+    [858, -570]
+)
+
+pf_l3 = (
+    [422, -630],
+    [422, -670],
+    [388, -670],
+    [388, -630]
+)
+
+cs_u1 = (
+    [147, 20],
+    [147, 180],
+    [187, 180],
+    [187, 20]
+)
+
+cs_u2 = (
+    [147, 220],
+    [147, 380],
+    [187, 380],
+    [187, 220]
+)
+
+cs_u3 = (
+    [147, 420],
+    [147, 580],
+    [187, 580],
+    [187, 420]
+)
+
+cs_l1 = (
+    [147, -20],
+    [147, -180],
+    [187, -180],
+    [187, -20]
+)
+
+cs_l2 = (
+    [147, -220],
+    [147, -380],
+    [187, -380],
+    [187, -220]
+)
+
+cs_l3 = (
+    [147, -420],
+    [147, -580],
+    [187, -580],
+    [187, -420]
+)
 
 _pf_u1 = [[1230, 323], [1158, 323], [1158, 212], [1230, 212]]
 _pf_u2 = [[862, 625], [798, 625], [798, 564], [862, 564]]
@@ -83,51 +166,3 @@ _pf_u3 = [[446, 746], [345, 746], [345, 650], [446, 650]]
 _cs_u1 = [[202, 200], [132, 200], [132, 0], [202, 0]]
 _cs_u2 = [[202, 400], [132, 400], [132, 200], [202, 200]]
 _cs_u3 = [[202, 600], [132, 600], [132, 400], [202, 400]]
-
-
-def _move_y(component, value):
-    """points are provided 57cm shifted up in the z-direction
-
-    Args:
-        component (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-
-    new_component = [[0, 0] for _ in range(len(component))]
-    for i, el in enumerate(component):
-        new_component[i] = [el[0], el[1]+value]
-        print(el[1]+value)
-
-    return new_component
-
-
-def _mirror_around_x(component, append: bool = False):
-    """_summary_
-
-    Args:
-        component (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-
-    # if append:
-    #     new_component = component.copy()
-    # else:
-    #     new_component = []
-
-    new_component = []
-
-    for el in component[::-1]:
-        if el[1] != 0:
-            new_component.append([el[0], -el[1]])
-        else:
-            if not append:
-                new_component.append([el[0], 0])
-
-    if append:
-        new_component = component + new_component
-
-    return new_component
