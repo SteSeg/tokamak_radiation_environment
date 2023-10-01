@@ -2,7 +2,7 @@
 import openmc
 import math
 import numpy as np
-import components_nodes as cn
+import component_nodes as cn
 import tokamak_radiation_environment as tre
 # %%
 # define materials
@@ -165,6 +165,15 @@ geometry.merge_surfaces = True
 
 # %%
 # settings
+
+# weight windows mesh
+mesh = openmc.CylindricalMesh()
+mesh.r_grid = np.arange(122, 1172, 6)  # 175 steps
+mesh.z_grid = np.arange(-700, 700, 10)  # 140 steps
+mesh.phi_grid = np.linspace(math.radians(-10), math.radians(10), 1)
+mesh.origin = (0., 0., 0.)
+energy_bounds = [0, 2e1, 2e2, 2e3, 2e4, 2e5, 2e6, 2e7]
+
 # source definition
 source = openmc.Source()
 source.particle = 'neutron'
@@ -181,8 +190,11 @@ settings = openmc.Settings(run_mode='fixed source')
 settings.photon_transport = False
 settings.source = source
 settings.batches = 100
-settings.particles = int(1e6)
+settings.particles = int(1e8)
 settings.output = {'tallies': False}
+
+# settings.weight_window_generators(mesh=mesh, energy_bounds=energy_bounds, particle_type='neutron',
+#                                   method='magic', max_realizations=2, update_interval=1, on_the_fly=True)
 
 # %%
 
@@ -241,4 +253,4 @@ model = openmc.Model(materials=materials, geometry=geometry,
 
 model.export_to_model_xml()
 
-# model.run(threads=12)
+model.run(threads=16)

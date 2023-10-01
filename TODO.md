@@ -1,6 +1,5 @@
 ## ITER-class model
-- case thicknesses 7-15 cm
-- insulation thicknesses 7-15 cm
+- weight windows
 
 ## ARC-class model
 - get how to properly shrink plasma
@@ -12,3 +11,4 @@
 - blanket can have an outer polygon
 - shield can have an outer polygon
 - tf coil can have an outer polygon
+- VV with channel and fw
