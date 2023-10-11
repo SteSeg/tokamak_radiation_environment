@@ -16,3 +16,13 @@
 - get fast reactor spectrum
 - plot against rebco (n,H), (n,He), (n,2n), (n,gamma) xs
 - build a case for different shielding components
+
+## openmc capabilities
+- polygon
+- wws
+- heating
+- flux, spectra
+- transmutation & depletion
+- cad importation
+- automatization and scan analysis
+- parallelization + hpc
