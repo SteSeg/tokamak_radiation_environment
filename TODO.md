@@ -4,6 +4,7 @@
 ## ARC-class model
 - get how to properly shrink plasma
 - rework on the radial build
+- weight windows
 
 
 ## components
