@@ -166,6 +166,9 @@ geometry.merge_surfaces = True
 # %%
 # settings
 
+# weight windows from attila4mc
+ww = openmc.openmc.wwinp_to_wws("weight_windows.cadis.wwinp")
+
 # weight windows mesh
 mesh = openmc.CylindricalMesh()
 mesh.r_grid = np.arange(122, 1172, 6)  # 175 steps
@@ -187,14 +190,14 @@ source.energy = openmc.stats.muir(e0=14.08e6, m_rat=5, kt=20000)
 
 # settings' settings
 settings = openmc.Settings(run_mode='fixed source')
-settings.photon_transport = False
+settings.photon_transport = True
+settings.electron_treatment = 'ttb'
+settings.weight_windows = ww
 settings.source = source
 settings.batches = 100
 settings.particles = int(1e8)
+settings.statepoint = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 settings.output = {'tallies': False}
-
-# settings.weight_window_generators(mesh=mesh, energy_bounds=energy_bounds, particle_type='neutron',
-#                                   method='magic', max_realizations=2, update_interval=1, on_the_fly=True)
 
 # %%
 

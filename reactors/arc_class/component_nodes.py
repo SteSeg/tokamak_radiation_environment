@@ -76,7 +76,7 @@ vessel_in = (
 # )  # magnet thickness=9, insulation=14, case=14
 
 tf_in = (
-    [575, 0],
+    [578, 0],
     [576, 32],
     [567, 71],
     [524, 220],
