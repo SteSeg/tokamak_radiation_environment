@@ -1,18 +1,28 @@
 ## ITER-class model
-- see how manta modeled coil material
-- case thicknesses 7-15 cm
-- insulation thicknesses 7-15 cm
+- weight windows
 
 ## ARC-class model
-- get how to properly shrink plasma
-- rework on the radial build
+- weight windows
 
-## TALLIES
-- mesh tally to identify the most irradiated part of the component
-- flux
-- spectra
-- energy deposition
-- He, H transmutation rate
+## components
+- tf coil able to be replicated
+- blanket can have an outer polygon
+- shield can have an outer polygon
+- tf coil can have an outer polygon
+- VV with channel and fw
 
 
-## MIT-Reactor model?
+## presentation
+- get fast reactor spectrum
+- plot against rebco (n,H), (n,He), (n,2n), (n,gamma) xs
+- build a case for different shielding components
+
+## openmc capabilities
+- polygon
+- wws
+- heating
+- flux, spectra
+- transmutation & depletion
+- cad importation
+- automatization and scan analysis
+- parallelization + hpc

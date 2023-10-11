@@ -2,12 +2,15 @@ from abc import ABC
 import openmc
 
 
-def _add_boundary_surfaces(region, boundary_1, boundary_2):
+def _add_boundaries(region, angle):
 
-    if boundary_1:
-        region = region & +(boundary_1)
-    if boundary_2:
-        region = region & -(boundary_2)
+    if angle:
+        _lower_bound = openmc.YPlane(
+            y0=0, boundary_type='reflective').rotate([0, 0, angle[0]])
+        _upper_bound = openmc.YPlane(
+            y0=0, boundary_type='reflective').rotate([0, 0, angle[1]])
+
+        region = region & +(_lower_bound) & -(_upper_bound)
 
     return region
 
@@ -29,25 +32,26 @@ class Component(ABC):
 
 
 class Plasma(Component):
-    def __init__(self, nodes, material: openmc.Material = None, surf_offset=0., boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, outer_nodes, material: openmc.Material = None, surf_offset=0., angle=None):
 
-        self.nodes = nodes
+        self.outer_nodes = outer_nodes
         self.material = material
         self.surf_offset = surf_offset
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
-        return openmc.model.Polygon(self.nodes, basis="rz").offset(self.surf_offset)
+        main_surf = openmc.model.Polygon(
+            self.outer_nodes, basis="rz").offset(self.surf_offset)
+
+        return main_surf
 
     @property
     def region(self):
 
         _region = -(self.surfaces)
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -58,22 +62,21 @@ class Plasma(Component):
 
 
 class VacuumVessel(Component):
-    def __init__(self, nodes, thickness: float, material: openmc.Material, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, inner_nodes, thickness: float, material: openmc.Material, angle=None):
         super().__init__()
 
-        self.nodes = nodes
+        self.inner_nodes = inner_nodes
         self.thickness = thickness
         self.material = material
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
 
         inner_surface = openmc.model.Polygon(
-            self.nodes, basis="rz")
+            self.inner_nodes, basis="rz")
         outer_surface = openmc.model.Polygon(
-            self.nodes, basis="rz").offset(self.thickness)
+            self.inner_nodes, basis="rz").offset(self.thickness)
 
         return inner_surface, outer_surface
 
@@ -82,8 +85,7 @@ class VacuumVessel(Component):
 
         _region = -(self.surfaces[1]) & +(self.surfaces[0])
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -95,14 +97,13 @@ class VacuumVessel(Component):
 
 class SOLVacuum(Component):
 
-    def __init__(self, plasma: Plasma, vacuum_vessel: VacuumVessel, material: openmc.Material = None, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, plasma: Plasma, vacuum_vessel: VacuumVessel, material: openmc.Material = None, angle=None):
         super().__init__()
 
         self.plasma = plasma
         self.vacuum_vessel = vacuum_vessel
         self.material = material
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
@@ -117,8 +118,7 @@ class SOLVacuum(Component):
 
         _region = -(self.surfaces[1]) & +(self.surfaces[0])
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -129,15 +129,14 @@ class SOLVacuum(Component):
 
 
 class Blanket(Component):
-    def __init__(self, vacuum_vessel: VacuumVessel, thickness: float, material: openmc.Material, nodes=None, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, vacuum_vessel: VacuumVessel, thickness: float, material: openmc.Material, nodes=None, angle=None):
         super().__init__()
 
         self.vacuum_vessel = vacuum_vessel
         self.thickness = thickness
         self.material = material
         self.nodes = nodes
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
@@ -157,8 +156,7 @@ class Blanket(Component):
 
         _region = -(self.surfaces[1]) & +(self.surfaces[0])
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -168,15 +166,14 @@ class Blanket(Component):
 
 
 class Shield(Component):
-    def __init__(self, blanket: Blanket, thickness: float, material: openmc.Material, nodes=None, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, blanket: Blanket, thickness: float, material: openmc.Material, nodes=None, angle=None):
         super().__init__()
 
         self.blanket = blanket
         self.thickness = thickness
         self.material = material
         self.nodes = nodes
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
@@ -196,8 +193,7 @@ class Shield(Component):
 
         _region = -(self.surfaces[1]) & +(self.surfaces[0])
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -207,37 +203,23 @@ class Shield(Component):
 
 
 class PFCoilMagnet(Component):
-    def __init__(self, centroid, height: float, radial_thickness: float, material: openmc.Material, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, nodes, material: openmc.Material, angle=None):
         super().__init__()
 
-        self.centroid = centroid
-        self.height = height
-        self.radial_thickness = radial_thickness
+        self.nodes = nodes
         self.material = material
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
 
-        lower_left = [self.centroid[0]-self.radial_thickness /
-                      2, self.centroid[1]-self.height/2]
-        lower_right = [self.centroid[0]+self.radial_thickness /
-                       2, self.centroid[1]-self.height/2]
-        upper_right = [self.centroid[0]+self.radial_thickness /
-                       2, self.centroid[1]+self.height/2]
-        upper_left = [self.centroid[0]-self.radial_thickness /
-                      2, self.centroid[1]+self.height/2]
-        nodes = [lower_left, lower_right, upper_right, upper_left]
-
-        return openmc.model.Polygon(nodes, basis="rz")
+        return openmc.model.Polygon(self.nodes, basis="rz")
 
     @property
     def region(self):
         _region = -(self.surfaces)
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -248,14 +230,13 @@ class PFCoilMagnet(Component):
 
 
 class PFCoilInsulation(Component):
-    def __init__(self, pf_coil_magnet: PFCoilMagnet, thickness: float, material: openmc.Material, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, pf_coil_magnet: PFCoilMagnet, thickness: float, material: openmc.Material, angle=None):
         super().__init__()
 
         self.pf_coil_magnet = pf_coil_magnet
         self.thickness = thickness
         self.material = material
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
@@ -267,8 +248,7 @@ class PFCoilInsulation(Component):
 
         _region = -(self.surfaces) & ~(self.pf_coil_magnet.region)
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -279,15 +259,14 @@ class PFCoilInsulation(Component):
 
 
 class PFCoilCase(Component):
-    def __init__(self, pf_coil_magnet: PFCoilMagnet, thickness: float, material: openmc.Material, pf_coil_insulation: PFCoilInsulation = None, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, pf_coil_magnet: PFCoilMagnet, thickness: float, material: openmc.Material, pf_coil_insulation: PFCoilInsulation = None, angle=None):
         super().__init__()
 
         self.pf_coil_magnet = pf_coil_magnet
         self.pf_coil_insulation = pf_coil_insulation
         self.material = material
         self.thickness = thickness
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
@@ -305,8 +284,7 @@ class PFCoilCase(Component):
         if self.pf_coil_insulation:
             _region = _region & ~(self.pf_coil_insulation.region)
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -317,21 +295,20 @@ class PFCoilCase(Component):
 
 
 class TFCoilMagnet(Component):
-    def __init__(self, nodes, thickness: float, material: openmc.Material, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, inner_nodes, thickness: float, material: openmc.Material, angle=None):
         super().__init__()
 
-        self.nodes = nodes
+        self.inner_nodes = inner_nodes
         self.thickness = thickness
         self.material = material
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
 
-        main_surface_in = openmc.model.Polygon(self.nodes, basis="rz")
+        main_surface_in = openmc.model.Polygon(self.inner_nodes, basis="rz")
         main_surface_out = openmc.model.Polygon(
-            self.nodes, basis="rz").offset(self.thickness)
+            self.inner_nodes, basis="rz").offset(self.thickness)
         lower_bound = openmc.YPlane(y0=-self.thickness)
         upper_bound = openmc.YPlane(y0=self.thickness)
         left_bound = openmc.XPlane(x0=0)
@@ -344,8 +321,7 @@ class TFCoilMagnet(Component):
         _region = +(self.surfaces[0]) & -(self.surfaces[1]) & + \
             (self.surfaces[2]) & -(self.surfaces[3]) & +(self.surfaces[4])
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -356,14 +332,13 @@ class TFCoilMagnet(Component):
 
 
 class TFCoilInsulation(Component):
-    def __init__(self, tf_coil_magnet: TFCoilMagnet, thickness: float, material: openmc.Material, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, tf_coil_magnet: TFCoilMagnet, thickness: float, material: openmc.Material, angle=None):
         super().__init__()
 
         self.tf_coil_magnet = tf_coil_magnet
         self.thickness = thickness
         self.material = material
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
@@ -388,8 +363,7 @@ class TFCoilInsulation(Component):
             (self.surfaces[2]) & -(self.surfaces[3]) & + \
             (self.surfaces[4]) & ~(self.tf_coil_magnet.region)
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -399,15 +373,14 @@ class TFCoilInsulation(Component):
 
 
 class TFCoilCase(Component):
-    def __init__(self, tf_coil_magnet: TFCoilMagnet, thickness: float, material: openmc.Material, tf_coil_insulation: PFCoilInsulation = None, boundary_1: openmc.Surface = None, boundary_2: openmc.Surface = None):
+    def __init__(self, tf_coil_magnet: TFCoilMagnet, thickness: float, material: openmc.Material, tf_coil_insulation: PFCoilInsulation = None, angle=None):
         super().__init__()
 
         self.tf_coil_magnet = tf_coil_magnet
         self.thickness = thickness
         self.material = material
         self.tf_coil_insulation = tf_coil_insulation
-        self.boundary_1 = boundary_1
-        self.boundary_2 = boundary_2
+        self.angle = angle
 
     @property
     def surfaces(self):
@@ -442,8 +415,7 @@ class TFCoilCase(Component):
         if self. tf_coil_insulation:
             _region = _region & ~(self.tf_coil_insulation.region)
 
-        _region = _add_boundary_surfaces(
-            _region, self.boundary_1, self.boundary_2)
+        _region = _add_boundaries(_region, self.angle)
 
         return _region
 
@@ -453,17 +425,59 @@ class TFCoilCase(Component):
         return openmc.Cell(region=self.region, fill=self.material)
 
 
-# class NewComponent(ABC):
-#     def __init__(self, nodes, material, exclude=None):
-#         self.nodes = nodes
-#         self.material = material
-#         self.exclude = exclude
+def core_group(plasma_outer_nodes, plasma_material: openmc.Material,
+               vessel_inner_nodes, vessel_thickness: float, vessel_material: openmc.Material,
+               blanket_thickness: float, blanket_material: openmc.Material,
+               shield_thickness: float, shield_material: openmc.Material,
+               angle=None):
 
-#     def surfaces(self):
-#         pass
+    plasma = Plasma(outer_nodes=plasma_outer_nodes,
+                    material=plasma_material, angle=angle)
 
-#     def region(self):
-#         pass
+    vacuum_vessel = VacuumVessel(inner_nodes=vessel_inner_nodes, thickness=vessel_thickness,
+                                 material=vessel_material, angle=angle)
 
-#     def cell(self):
-#         pass
+    sol = SOLVacuum(
+        plasma=plasma, vacuum_vessel=vacuum_vessel, angle=angle)
+
+    blanket = Blanket(vacuum_vessel=vacuum_vessel, thickness=blanket_thickness,
+                      material=blanket_material, angle=angle)
+
+    shield = Shield(blanket=blanket, thickness=shield_thickness,
+                    material=shield_material, angle=angle)
+
+    return plasma, sol, vacuum_vessel, blanket, shield
+
+
+def pfcoil_group(magnet_nodes, magnet_material: openmc.Material,
+                 insulation_thickness: float, insulation_material: openmc.Material,
+                 case_thickness: float, case_material: openmc.Material,
+                 angle=None):
+
+    pf_magnet = PFCoilMagnet(
+        nodes=magnet_nodes, material=magnet_material, angle=angle)
+
+    pf_insulation = PFCoilInsulation(pf_coil_magnet=pf_magnet,
+                                     thickness=insulation_thickness,
+                                     material=insulation_material, angle=angle)
+    pf_case = PFCoilCase(pf_coil_magnet=pf_magnet, pf_coil_insulation=pf_insulation,
+                         thickness=case_thickness, material=case_material, angle=angle)
+
+    return pf_magnet, pf_insulation, pf_case
+
+
+def tfcoil_group(magnet_inner_nodes, magnet_thickness: float, magnet_material: openmc.Material,
+                 insulation_thickness: float, insulation_material: openmc.Material,
+                 case_thickness: float, case_material: openmc.Material,
+                 angle=None):
+
+    tf_coil_magnet = TFCoilMagnet(inner_nodes=magnet_inner_nodes, thickness=magnet_thickness,
+                                  material=magnet_material, angle=angle)
+
+    tf_coil_insulation = TFCoilInsulation(tf_coil_magnet=tf_coil_magnet, thickness=insulation_thickness,
+                                          material=insulation_material, angle=angle)
+
+    tf_coil_case = TFCoilCase(tf_coil_magnet=tf_coil_magnet, tf_coil_insulation=tf_coil_insulation,
+                              thickness=case_thickness, material=case_material, angle=angle)
+
+    return tf_coil_magnet, tf_coil_insulation, tf_coil_case
