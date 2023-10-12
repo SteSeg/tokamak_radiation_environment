@@ -195,8 +195,9 @@ settings.electron_treatment = 'ttb'
 settings.weight_windows = ww
 settings.source = source
 settings.batches = 100
-settings.particles = int(1e8)
-settings.statepoint = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+settings.particles = int(1e9)
+settings.statepoint = {'batches': [
+    5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
 settings.output = {'tallies': False}
 
 # %%
@@ -214,8 +215,8 @@ mesh.upper_right = [680, 120, 500]
 globalmesh_filter = openmc.MeshFilter(mesh)
 # cylindrical mesh
 mesh = openmc.CylindricalMesh()
-mesh.r_grid = [102, 107]
-mesh.z_grid = [-2.5, 2.5]
+mesh.r_grid = [100, 107]
+mesh.z_grid = [-20, 20]
 mesh.phi_grid = (0, math.radians(360))
 mesh.origin = (0., 0., 0.)
 localmesh_filter = openmc.MeshFilter(mesh)
@@ -226,7 +227,7 @@ energy_filter = openmc.EnergyFilter(tripoli315)
 
 # tallies
 # mesh tally - flux
-tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
+tally1 = openmc.Tally(tally_id=1, name="flux_mesh")
 tally1.filters = [particle_filter, globalmesh_filter]
 tally1.scores = ["flux"]
 
@@ -242,7 +243,7 @@ tally3.scores = ["H1-production", "H2-production", "H3-production",
                  "He3-production", "He4-production"]
 
 # mesh tally - flux
-tally4 = openmc.Tally(tally_id=4, name="nflux_mesh_spectrum")
+tally4 = openmc.Tally(tally_id=4, name="flux_mesh_spectrum")
 tally4.filters = [particle_filter, localmesh_filter, energy_filter]
 tally4.scores = ["flux"]
 
@@ -256,4 +257,4 @@ model = openmc.Model(materials=materials, geometry=geometry,
 
 model.export_to_model_xml()
 
-model.run(threads=16)
+model.run(threads=12)

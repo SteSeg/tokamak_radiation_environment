@@ -295,13 +295,14 @@ class PFCoilCase(Component):
 
 
 class TFCoilMagnet(Component):
-    def __init__(self, inner_nodes, thickness: float, material: openmc.Material, angle=None):
+    def __init__(self, inner_nodes, thickness: float, material: openmc.Material, angle=None, rotation_angle: float = 0):
         super().__init__()
 
         self.inner_nodes = inner_nodes
         self.thickness = thickness
         self.material = material
         self.angle = angle
+        self.rotation_angle = rotation_angle
 
     @property
     def surfaces(self):
@@ -309,9 +310,11 @@ class TFCoilMagnet(Component):
         main_surface_in = openmc.model.Polygon(self.inner_nodes, basis="rz")
         main_surface_out = openmc.model.Polygon(
             self.inner_nodes, basis="rz").offset(self.thickness)
-        lower_bound = openmc.YPlane(y0=-self.thickness)
-        upper_bound = openmc.YPlane(y0=self.thickness)
-        left_bound = openmc.XPlane(x0=0)
+        lower_bound = openmc.YPlane(
+            y0=-self.thickness).rotate((0, 0, self.rotation_angle))
+        upper_bound = openmc.YPlane(y0=self.thickness).rotate(
+            (0, 0, self.rotation_angle))
+        left_bound = openmc.XPlane(x0=0).rotate((0, 0, self.rotation_angle))
 
         return main_surface_in, main_surface_out, lower_bound, upper_bound, left_bound
 
@@ -339,20 +342,23 @@ class TFCoilInsulation(Component):
         self.thickness = thickness
         self.material = material
         self.angle = angle
+        self.rotation_angle = tf_coil_magnet.rotation_angle
 
     @property
     def surfaces(self):
 
-        lb_y0 = self.tf_coil_magnet.surfaces[2].y0 - self.thickness
-        ub_y0 = self.tf_coil_magnet.surfaces[3].y0 + self.thickness
+        lb_y0 = self.tf_coil_magnet.surfaces[2].d - self.thickness
+        ub_y0 = self.tf_coil_magnet.surfaces[3].d + self.thickness
 
         main_surface_in = self.tf_coil_magnet.surfaces[0].offset(
             -self.thickness)
         main_surface_out = self.tf_coil_magnet.surfaces[1].offset(
             +self.thickness)
-        lower_bound = openmc.YPlane(y0=lb_y0)
-        upper_bound = openmc.YPlane(y0=ub_y0)
-        left_bound = openmc.XPlane(x0=0)
+        lower_bound = openmc.YPlane(y0=lb_y0).rotate(
+            (0, 0, self.rotation_angle))
+        upper_bound = openmc.YPlane(y0=ub_y0).rotate(
+            (0, 0, self.rotation_angle))
+        left_bound = openmc.XPlane(x0=0).rotate((0, 0, self.rotation_angle))
 
         return main_surface_in, main_surface_out, lower_bound, upper_bound, left_bound
 
@@ -381,6 +387,7 @@ class TFCoilCase(Component):
         self.material = material
         self.tf_coil_insulation = tf_coil_insulation
         self.angle = angle
+        self.rotation_angle = tf_coil_magnet.rotation_angle
 
     @property
     def surfaces(self):
@@ -390,18 +397,20 @@ class TFCoilCase(Component):
         else:
             insulation_thickness = 0.
 
-        lb_y0 = self.tf_coil_magnet.surfaces[2].y0 - \
+        lb_y0 = self.tf_coil_magnet.surfaces[2].d - \
             self.thickness - insulation_thickness
-        ub_y0 = self.tf_coil_magnet.surfaces[3].y0 + \
+        ub_y0 = self.tf_coil_magnet.surfaces[3].d + \
             self.thickness + insulation_thickness
 
         main_surface_in = self.tf_coil_magnet.surfaces[0].offset(
             -(self.thickness+insulation_thickness))
         main_surface_out = self.tf_coil_magnet.surfaces[1].offset(
             +(self.thickness+insulation_thickness))
-        lower_bound = openmc.YPlane(y0=lb_y0)
-        upper_bound = openmc.YPlane(y0=ub_y0)
-        left_bound = openmc.XPlane(x0=0)
+        lower_bound = openmc.YPlane(y0=lb_y0).rotate(
+            (0, 0, self.rotation_angle))
+        upper_bound = openmc.YPlane(y0=ub_y0).rotate(
+            (0, 0, self.rotation_angle))
+        left_bound = openmc.XPlane(x0=0).rotate((0, 0, self.rotation_angle))
 
         return main_surface_in, main_surface_out, lower_bound, upper_bound, left_bound
 
@@ -469,10 +478,10 @@ def pfcoil_group(magnet_nodes, magnet_material: openmc.Material,
 def tfcoil_group(magnet_inner_nodes, magnet_thickness: float, magnet_material: openmc.Material,
                  insulation_thickness: float, insulation_material: openmc.Material,
                  case_thickness: float, case_material: openmc.Material,
-                 angle=None):
+                 angle=None, rotation_angle: float = 0):
 
     tf_coil_magnet = TFCoilMagnet(inner_nodes=magnet_inner_nodes, thickness=magnet_thickness,
-                                  material=magnet_material, angle=angle)
+                                  material=magnet_material, angle=angle, rotation_angle=rotation_angle)
 
     tf_coil_insulation = TFCoilInsulation(tf_coil_magnet=tf_coil_magnet, thickness=insulation_thickness,
                                           material=insulation_material, angle=angle)
