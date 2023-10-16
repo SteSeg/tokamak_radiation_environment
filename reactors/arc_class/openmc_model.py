@@ -169,14 +169,6 @@ geometry.merge_surfaces = True
 # weight windows from attila4mc
 ww = openmc.openmc.wwinp_to_wws("weight_windows.cadis.wwinp")
 
-# weight windows mesh
-mesh = openmc.CylindricalMesh()
-mesh.r_grid = np.arange(122, 1172, 6)  # 175 steps
-mesh.z_grid = np.arange(-700, 700, 10)  # 140 steps
-mesh.phi_grid = np.linspace(math.radians(-10), math.radians(10), 1)
-mesh.origin = (0., 0., 0.)
-energy_bounds = [0, 2e1, 2e2, 2e3, 2e4, 2e5, 2e6, 2e7]
-
 # source definition
 source = openmc.Source()
 source.particle = 'neutron'
@@ -190,12 +182,12 @@ source.energy = openmc.stats.muir(e0=14.08e6, m_rat=5, kt=20000)
 
 # settings' settings
 settings = openmc.Settings(run_mode='fixed source')
-settings.photon_transport = True
-settings.electron_treatment = 'ttb'
+settings.photon_transport = False
+# settings.electron_treatment = 'ttb'
 settings.weight_windows = ww
 settings.source = source
 settings.batches = 100
-settings.particles = int(1e9)
+settings.particles = int(1e8)
 settings.statepoint = {'batches': [
     5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
 settings.output = {'tallies': False}
@@ -205,6 +197,8 @@ settings.output = {'tallies': False}
 # filters
 particle_filter = openmc.ParticleFilter(
     ['neutron', 'photon', 'electron', 'positron'])
+
+neutron_filter = openmc.ParticleFilter(['neutron'])
 
 # mesh
 # regular mesh
@@ -226,25 +220,25 @@ tripoli315 = openmc.mgxs.GROUP_STRUCTURES['TRIPOLI-315']
 energy_filter = openmc.EnergyFilter(tripoli315)
 
 # tallies
-# mesh tally - flux
-tally1 = openmc.Tally(tally_id=1, name="flux_mesh")
-tally1.filters = [particle_filter, globalmesh_filter]
+# mesh tally - nflux
+tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
+tally1.filters = [neutron_filter, globalmesh_filter]
 tally1.scores = ["flux"]
 
 # mesh tally - heating
 tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
 tally2.filters = [particle_filter, globalmesh_filter]
-tally2.scores = ["heating"]
+tally2.scores = ["heating-local"]
 
 # mesh tally - gas production
-tally3 = openmc.Tally(tally_id=3, name="heating_mesh")
+tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
 tally3.filters = [globalmesh_filter]
 tally3.scores = ["H1-production", "H2-production", "H3-production",
                  "He3-production", "He4-production"]
 
 # mesh tally - flux
 tally4 = openmc.Tally(tally_id=4, name="flux_mesh_spectrum")
-tally4.filters = [particle_filter, localmesh_filter, energy_filter]
+tally4.filters = [neutron_filter, localmesh_filter, energy_filter]
 tally4.scores = ["flux"]
 
 tallies = openmc.Tallies([tally1, tally2, tally3, tally4])
@@ -257,4 +251,4 @@ model = openmc.Model(materials=materials, geometry=geometry,
 
 model.export_to_model_xml()
 
-model.run(threads=12)
+model.run(threads=8)

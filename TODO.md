@@ -1,5 +1,4 @@
 ## ITER-class model
-- weight windows
 
 ## ARC-class model
 
