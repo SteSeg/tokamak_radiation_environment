@@ -168,7 +168,7 @@ geometry.merge_surfaces = True
 # settings
 
 # weight windows from attila4mc
-ww = openmc.openmc.wwinp_to_wws("weight_windows.cadis.wwinp")
+ww = openmc.wwinp_to_wws("weight_windows.cadis.wwinp")
 
 # source definition
 source = openmc.Source()
@@ -233,7 +233,7 @@ tally2.scores = ["heating-local"]
 
 # mesh tally - gas production
 tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
-tally3.filters = [globalmesh_filter]
+tally3.filters = [localmesh_filter]
 tally3.scores = ["H1-production", "H2-production", "H3-production",
                  "He3-production", "He4-production"]
 
@@ -242,7 +242,12 @@ tally4 = openmc.Tally(tally_id=4, name="flux_mesh_spectrum")
 tally4.filters = [neutron_filter, localmesh_filter, energy_filter]
 tally4.scores = ["flux"]
 
-tallies = openmc.Tallies([tally1, tally2, tally3, tally4])
+# mesh tally - heating
+tally5 = openmc.Tally(tally_id=5, name="heating_localmesh")
+tally5.filters = [particle_filter, localmesh_filter]
+tally5.scores = ["heating-local"]
+
+tallies = openmc.Tallies([tally1, tally2, tally3, tally4, tally5])
 
 
 # %%
