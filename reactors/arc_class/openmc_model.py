@@ -15,11 +15,11 @@ ss316L = tre.materials.ss316L
 b4c = tre.materials.b4c
 wc = tre.materials.wc
 
-nb3sn = tre.materials.nb3sn
+windingpack = tre.materials.windingpack
 fiberglass = tre.materials.fiberglass
 
 materials = openmc.Materials(
-    [dt_plasma, flibe, wc, eurofer, ss304, nb3sn, fiberglass, ss316L])
+    [dt_plasma, flibe, wc, eurofer, ss304, windingpack, fiberglass, ss316L])
 
 # %%
 
@@ -40,7 +40,7 @@ plasma, sol, vacuum_vessel, blanket, shield = tre.components.core_group(
 
 # tf coil
 tf_coil_magnet, tf_coil_insulation, tf_coil_case = tre.components.tfcoil_group(
-    magnet_inner_nodes=cn.tf_in, magnet_thickness=9, magnet_material=nb3sn,
+    magnet_inner_nodes=cn.tf_in, magnet_thickness=9, magnet_material=windingpack,
     insulation_thickness=14, insulation_material=fiberglass,
     case_thickness=14, case_material=ss316L,
     angle=angle)
@@ -48,42 +48,42 @@ tf_coil_magnet, tf_coil_insulation, tf_coil_case = tre.components.tfcoil_group(
 # pf coils
 # u1
 pf_u1_magnet, pf_u1_insulation, pf_u1_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.pf_u1, magnet_material=nb3sn,
+    magnet_nodes=cn.pf_u1, magnet_material=windingpack,
     insulation_thickness=10, insulation_material=fiberglass,
     case_thickness=10, case_material=ss316L,
     angle=angle)
 
 # u2
 pf_u2_magnet, pf_u2_insulation, pf_u2_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.pf_u2, magnet_material=nb3sn,
+    magnet_nodes=cn.pf_u2, magnet_material=windingpack,
     insulation_thickness=10, insulation_material=fiberglass,
     case_thickness=10, case_material=ss316L,
     angle=angle)
 
 # u3
 pf_u3_magnet, pf_u3_insulation, pf_u3_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.pf_u3, magnet_material=nb3sn,
+    magnet_nodes=cn.pf_u3, magnet_material=windingpack,
     insulation_thickness=10, insulation_material=fiberglass,
     case_thickness=10, case_material=ss316L,
     angle=angle)
 
 # l1
 pf_l1_magnet, pf_l1_insulation, pf_l1_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.pf_l1, magnet_material=nb3sn,
+    magnet_nodes=cn.pf_l1, magnet_material=windingpack,
     insulation_thickness=10, insulation_material=fiberglass,
     case_thickness=10, case_material=ss316L,
     angle=angle)
 
 # l2
 pf_l2_magnet, pf_l2_insulation, pf_l2_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.pf_l2, magnet_material=nb3sn,
+    magnet_nodes=cn.pf_l2, magnet_material=windingpack,
     insulation_thickness=10, insulation_material=fiberglass,
     case_thickness=10, case_material=ss316L,
     angle=angle)
 
 # l3
 pf_l3_magnet, pf_l3_insulation, pf_l3_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.pf_l3, magnet_material=nb3sn,
+    magnet_nodes=cn.pf_l3, magnet_material=windingpack,
     insulation_thickness=10, insulation_material=fiberglass,
     case_thickness=10, case_material=ss316L,
     angle=angle)
@@ -91,42 +91,42 @@ pf_l3_magnet, pf_l3_insulation, pf_l3_case = tre.components.pfcoil_group(
 # central solenoid
 # u1
 cs_u1_magnet, cs_u1_insulation, cs_u1_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.cs_u1, magnet_material=nb3sn,
+    magnet_nodes=cn.cs_u1, magnet_material=windingpack,
     insulation_thickness=5, insulation_material=fiberglass,
     case_thickness=5, case_material=ss316L,
     angle=angle)
 
 # u2
 cs_u2_magnet, cs_u2_insulation, cs_u2_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.cs_u2, magnet_material=nb3sn,
+    magnet_nodes=cn.cs_u2, magnet_material=windingpack,
     insulation_thickness=5, insulation_material=fiberglass,
     case_thickness=5, case_material=ss316L,
     angle=angle)
 
 # u3
 cs_u3_magnet, cs_u3_insulation, cs_u3_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.cs_u3, magnet_material=nb3sn,
+    magnet_nodes=cn.cs_u3, magnet_material=windingpack,
     insulation_thickness=5, insulation_material=fiberglass,
     case_thickness=5, case_material=ss316L,
     angle=angle)
 
 # l1
 cs_l1_magnet, cs_l1_insulation, cs_l1_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.cs_l1, magnet_material=nb3sn,
+    magnet_nodes=cn.cs_l1, magnet_material=windingpack,
     insulation_thickness=5, insulation_material=fiberglass,
     case_thickness=5, case_material=ss316L,
     angle=angle)
 
 # l2
 cs_l2_magnet, cs_l2_insulation, cs_l2_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.cs_l2, magnet_material=nb3sn,
+    magnet_nodes=cn.cs_l2, magnet_material=windingpack,
     insulation_thickness=5, insulation_material=fiberglass,
     case_thickness=5, case_material=ss316L,
     angle=angle)
 
 # l3
 cs_l3_magnet, cs_l3_insulation, cs_l3_case = tre.components.pfcoil_group(
-    magnet_nodes=cn.cs_l3, magnet_material=nb3sn,
+    magnet_nodes=cn.cs_l3, magnet_material=windingpack,
     insulation_thickness=5, insulation_material=fiberglass,
     case_thickness=5, case_material=ss316L,
     angle=angle)
@@ -257,4 +257,4 @@ model = openmc.Model(materials=materials, geometry=geometry,
 
 model.export_to_model_xml()
 
-model.run(threads=8)
+model.run(threads=8, geometry_debug=True)
