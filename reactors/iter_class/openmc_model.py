@@ -142,7 +142,8 @@ reactor_components = [plasma, sol, vacuum_vessel, blanket, shield,
 
 # building enclosure
 enclosure_surf = openmc.Sphere(r=5000, boundary_type='vacuum')
-enclosure_region = -enclosure_surf
+enclosure_left_bound = openmc.XPlane(x0=0, boundary_type='vacuum')
+enclosure_region = -enclosure_surf & +enclosure_left_bound
 for rc in reactor_components:
     enclosure_region = enclosure_region & ~(rc.region)
 enclosure_cell = openmc.Cell(region=enclosure_region, fill=None)
@@ -167,7 +168,7 @@ geometry.merge_surfaces = True
 # settings
 
 # weight windows from attila4mc
-ww = openmc.openmc.wwinp_to_wws("weight_windows.cadis.wwinp")
+ww = openmc.wwinp_to_wws("weight_windows.cadis.wwinp")
 
 # source definition
 source = openmc.Source()
@@ -182,13 +183,14 @@ source.energy = openmc.stats.muir(e0=14.08e6, m_rat=5, kt=20000)
 
 # settings' settings
 settings = openmc.Settings(run_mode='fixed source')
-settings.photon_transport = True
-settings.electron_treatment = 'ttb'
+settings.photon_transport = False
+# settings.electron_treatment = 'ttb'
 settings.weight_windows = ww
 settings.source = source
 settings.batches = 100
 settings.particles = int(1e8)
-settings.statepoint = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+settings.statepoint = {'batches': [
+    5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
 settings.output = {'tallies': False}
 
 # %%
@@ -196,6 +198,8 @@ settings.output = {'tallies': False}
 # filters
 particle_filter = openmc.ParticleFilter(
     ['neutron', 'photon', 'electron', 'positron'])
+
+neutron_filter = openmc.ParticleFilter(['neutron'])
 
 # mesh
 # regular mesh
@@ -206,8 +210,8 @@ mesh.upper_right = [1178, 165, 700]
 globalmesh_filter = openmc.MeshFilter(mesh)
 # cylindrical mesh
 mesh = openmc.CylindricalMesh()
-mesh.r_grid = [267, 272]
-mesh.z_grid = [-2.5, 2.5]
+mesh.r_grid = [262, 272]
+mesh.z_grid = [-20, 20]
 mesh.phi_grid = (0, math.radians(360))
 mesh.origin = (0., 0., 0.)
 localmesh_filter = openmc.MeshFilter(mesh)
@@ -219,26 +223,31 @@ energy_filter = openmc.EnergyFilter(tripoli315)
 # tallies
 # mesh tally - nflux
 tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
-tally1.filters = [particle_filter, globalmesh_filter]
+tally1.filters = [neutron_filter, globalmesh_filter]
 tally1.scores = ["flux"]
 
 # mesh tally - heating
 tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
 tally2.filters = [particle_filter, globalmesh_filter]
-tally2.scores = ["heating"]
+tally2.scores = ["heating-local"]
 
 # mesh tally - gas production
-tally3 = openmc.Tally(tally_id=3, name="heating_mesh")
-tally3.filters = [globalmesh_filter]
+tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
+tally3.filters = [localmesh_filter]
 tally3.scores = ["H1-production", "H2-production", "H3-production",
                  "He3-production", "He4-production"]
 
 # mesh tally - flux
-tally4 = openmc.Tally(tally_id=4, name="nflux_mesh_spectrum")
-tally4.filters = [particle_filter, localmesh_filter, energy_filter]
+tally4 = openmc.Tally(tally_id=4, name="flux_mesh_spectrum")
+tally4.filters = [neutron_filter, localmesh_filter, energy_filter]
 tally4.scores = ["flux"]
 
-tallies = openmc.Tallies([tally1, tally2, tally3, tally4])
+# mesh tally - heating
+tally5 = openmc.Tally(tally_id=5, name="heating_localmesh")
+tally5.filters = [particle_filter, localmesh_filter]
+tally5.scores = ["heating-local"]
+
+tallies = openmc.Tallies([tally1, tally2, tally3, tally4, tally5])
 
 
 # %%
@@ -248,4 +257,4 @@ model = openmc.Model(materials=materials, geometry=geometry,
 
 model.export_to_model_xml()
 
-model.run(threads=16)
+model.run(threads=8)

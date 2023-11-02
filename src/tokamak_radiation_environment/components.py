@@ -3,6 +3,25 @@ import openmc
 
 
 def _add_boundaries(region, angle):
+    """Include two reflective surfaces perpendicular to the xy plane
+    in order to slice the tokamak according to the values given in the
+    angle argument. The initial region has to be axysymmetric around z.
+    The result is an openmc.Region that is symmetric 
+    with respect the xz plane
+
+    Parameters
+    ----------
+    region : openmc.Region 
+        Region to slice
+    angle : tuple of two floats
+        The first float is the angle in deg to cut with respect the x axis
+        The second float is the angle in deg to finish the cut
+
+    Returns
+    -------
+    openmc.Region
+        The region subtended by the two angles provided in the angle argument
+    """
 
     if angle:
         _lower_bound = openmc.YPlane(
@@ -32,7 +51,23 @@ class Component(ABC):
 
 
 class Plasma(Component):
-    def __init__(self, outer_nodes, material: openmc.Material = None, surf_offset=0., angle=None):
+    def __init__(self, outer_nodes, material: openmc.Material = None, surf_offset: float = 0., angle=None):
+        """Plasma component described by its outer surface. The outer surface is an openmc
+
+        Parameters
+        ----------
+        outer_nodes : iterable of tuples with (r,z) coordinates and describing a closed polygon
+            _description_
+        material : openmc.Material, optional
+            material to fill the plasma with, by default None
+        surf_offset : float, optional
+            offset the surfaces decribed by the nodes by this value (cm)
+            if positive it offsets outwards,
+            if negative it offsets inwards, by default 0.
+        angle : tuple of two floats, optional
+        The first float is the angle in deg to cut with respect the x axis
+        The second float is the angle in deg to finish the cut, by default None
+        """
 
         self.outer_nodes = outer_nodes
         self.material = material
@@ -41,6 +76,13 @@ class Plasma(Component):
 
     @property
     def surfaces(self):
+        """openmc.Surface generator
+
+        Returns
+        -------
+        openmc.Surface
+            Rurfaces necessary to build the plasma component
+        """
         main_surf = openmc.model.Polygon(
             self.outer_nodes, basis="rz").offset(self.surf_offset)
 
@@ -48,6 +90,13 @@ class Plasma(Component):
 
     @property
     def region(self):
+        """openmc.Region generator
+
+        Returns
+        -------
+        openmc.Region
+            Regions that define the bodies in the openmc simulation
+        """
 
         _region = -(self.surfaces)
 
@@ -57,6 +106,13 @@ class Plasma(Component):
 
     @property
     def cell(self):
+        """openmc.Cell generator
+
+        Returns
+        -------
+        openmc.Cell
+            Final component cell for the openmc simulation
+        """
 
         return openmc.Cell(region=self.region, fill=self.material)
 
@@ -295,13 +351,14 @@ class PFCoilCase(Component):
 
 
 class TFCoilMagnet(Component):
-    def __init__(self, inner_nodes, thickness: float, material: openmc.Material, angle=None):
+    def __init__(self, inner_nodes, thickness: float, material: openmc.Material, angle=None, rotation_angle: float = 0):
         super().__init__()
 
         self.inner_nodes = inner_nodes
         self.thickness = thickness
         self.material = material
         self.angle = angle
+        self.rotation_angle = rotation_angle
 
     @property
     def surfaces(self):
@@ -309,9 +366,11 @@ class TFCoilMagnet(Component):
         main_surface_in = openmc.model.Polygon(self.inner_nodes, basis="rz")
         main_surface_out = openmc.model.Polygon(
             self.inner_nodes, basis="rz").offset(self.thickness)
-        lower_bound = openmc.YPlane(y0=-self.thickness)
-        upper_bound = openmc.YPlane(y0=self.thickness)
-        left_bound = openmc.XPlane(x0=0)
+        lower_bound = openmc.YPlane(
+            y0=-self.thickness).rotate((0, 0, self.rotation_angle))
+        upper_bound = openmc.YPlane(y0=self.thickness).rotate(
+            (0, 0, self.rotation_angle))
+        left_bound = openmc.XPlane(x0=0).rotate((0, 0, self.rotation_angle))
 
         return main_surface_in, main_surface_out, lower_bound, upper_bound, left_bound
 
@@ -339,20 +398,23 @@ class TFCoilInsulation(Component):
         self.thickness = thickness
         self.material = material
         self.angle = angle
+        self.rotation_angle = tf_coil_magnet.rotation_angle
 
     @property
     def surfaces(self):
 
-        lb_y0 = self.tf_coil_magnet.surfaces[2].y0 - self.thickness
-        ub_y0 = self.tf_coil_magnet.surfaces[3].y0 + self.thickness
+        lb_y0 = self.tf_coil_magnet.surfaces[2].d - self.thickness
+        ub_y0 = self.tf_coil_magnet.surfaces[3].d + self.thickness
 
         main_surface_in = self.tf_coil_magnet.surfaces[0].offset(
             -self.thickness)
         main_surface_out = self.tf_coil_magnet.surfaces[1].offset(
             +self.thickness)
-        lower_bound = openmc.YPlane(y0=lb_y0)
-        upper_bound = openmc.YPlane(y0=ub_y0)
-        left_bound = openmc.XPlane(x0=0)
+        lower_bound = openmc.YPlane(y0=lb_y0).rotate(
+            (0, 0, self.rotation_angle))
+        upper_bound = openmc.YPlane(y0=ub_y0).rotate(
+            (0, 0, self.rotation_angle))
+        left_bound = openmc.XPlane(x0=0).rotate((0, 0, self.rotation_angle))
 
         return main_surface_in, main_surface_out, lower_bound, upper_bound, left_bound
 
@@ -381,6 +443,7 @@ class TFCoilCase(Component):
         self.material = material
         self.tf_coil_insulation = tf_coil_insulation
         self.angle = angle
+        self.rotation_angle = tf_coil_magnet.rotation_angle
 
     @property
     def surfaces(self):
@@ -390,18 +453,20 @@ class TFCoilCase(Component):
         else:
             insulation_thickness = 0.
 
-        lb_y0 = self.tf_coil_magnet.surfaces[2].y0 - \
+        lb_y0 = self.tf_coil_magnet.surfaces[2].d - \
             self.thickness - insulation_thickness
-        ub_y0 = self.tf_coil_magnet.surfaces[3].y0 + \
+        ub_y0 = self.tf_coil_magnet.surfaces[3].d + \
             self.thickness + insulation_thickness
 
         main_surface_in = self.tf_coil_magnet.surfaces[0].offset(
             -(self.thickness+insulation_thickness))
         main_surface_out = self.tf_coil_magnet.surfaces[1].offset(
             +(self.thickness+insulation_thickness))
-        lower_bound = openmc.YPlane(y0=lb_y0)
-        upper_bound = openmc.YPlane(y0=ub_y0)
-        left_bound = openmc.XPlane(x0=0)
+        lower_bound = openmc.YPlane(y0=lb_y0).rotate(
+            (0, 0, self.rotation_angle))
+        upper_bound = openmc.YPlane(y0=ub_y0).rotate(
+            (0, 0, self.rotation_angle))
+        left_bound = openmc.XPlane(x0=0).rotate((0, 0, self.rotation_angle))
 
         return main_surface_in, main_surface_out, lower_bound, upper_bound, left_bound
 
@@ -430,6 +495,39 @@ def core_group(plasma_outer_nodes, plasma_material: openmc.Material,
                blanket_thickness: float, blanket_material: openmc.Material,
                shield_thickness: float, shield_material: openmc.Material,
                angle=None):
+    """This function allows do directly generate all the Core components in one call
+
+    Parameters
+    ----------
+    plasma_outer_nodes : Iterable of tuples
+        List of (r,z) coordinates for the plasma cell outer surface
+    plasma_material : openmc.Material
+        Material to fill the plasma with
+    vessel_inner_nodes : Iterable of tuples
+        List of (r,z) coordinates for the vessel cell inner surface
+    vessel_thickness : float
+        number (cm) for offsetting the vessel nodes outwards and get the vessel outer surface
+    vessel_material : openmc.Material
+        Material to fill the vessel with
+    blanket_thickness : float
+        number (cm) for offsetting the vessel nodes further outwards other than the vessel
+        thickness itself and get the blanket outer surface
+    blanket_material : openmc.Material
+        Material to fill the blanket with
+    shield_thickness : float
+        number (cm) for offsetting the vessel nodes further outwards other than the vessel
+        and blanket thickness itself and get the shield outer surface
+    shield_material : openmc.Material
+        Material to fill the shield with
+    angle : tuple of two floats, optional
+        The first float is the angle in deg to cut with respect the x axis
+        The second float is the angle in deg to finish the cut, by default None
+
+    Returns
+    -------
+    Four Component types
+        Plasma, VacuumVessel, SOLVacuum, Blanket, Shield
+    """
 
     plasma = Plasma(outer_nodes=plasma_outer_nodes,
                     material=plasma_material, angle=angle)
@@ -453,6 +551,33 @@ def pfcoil_group(magnet_nodes, magnet_material: openmc.Material,
                  insulation_thickness: float, insulation_material: openmc.Material,
                  case_thickness: float, case_material: openmc.Material,
                  angle=None):
+    """This function allows do directly generate all the PFCoil components in one call
+
+    Parameters
+    ----------
+    magnet_nodes : Iterable of tuples
+        List of (r,z) coordinates for the superconductor cell
+    magnet_material : openmc.Material
+        Material to fill the magnet with
+    insulation_thickness : float
+        number (cm) for offsetting the magnet nodes outwards and get the insulation
+        outer surface
+    insulation_material : openmc.Material
+        Material to fill the insulation with
+    case_thickness : float
+        number (cm) for offsetting the magnet nodes further outwards other than the 
+        insulation thickness and get the case outer surface
+    case_material : openmc.Material
+        Material to fill the case with
+    angle : tuple of two floats, optional
+        The first float is the angle in deg to cut with respect the x axis
+        The second float is the angle in deg to finish the cut, by default None
+
+    Returns
+    -------
+    Three Component types
+    PFCoilMagnet, PFCoilInsulation, PFCoilCase
+    """
 
     pf_magnet = PFCoilMagnet(
         nodes=magnet_nodes, material=magnet_material, angle=angle)
@@ -469,10 +594,46 @@ def pfcoil_group(magnet_nodes, magnet_material: openmc.Material,
 def tfcoil_group(magnet_inner_nodes, magnet_thickness: float, magnet_material: openmc.Material,
                  insulation_thickness: float, insulation_material: openmc.Material,
                  case_thickness: float, case_material: openmc.Material,
-                 angle=None):
+                 angle=None, rotation_angle: float = 0):
+    """This function allows do directly generate all the TFCoil components in one call
+
+    Parameters
+    ----------
+    magnet_inner_nodes : Iterable of tuples
+        List of (r,z) coordinates for the superconductor cell inner surface
+    magnet_thickness : float
+        number (cm) for offsetting the magnet nodes outwards in poloidal direction
+        and to extrude the magnet in the toroidal direction with the xz plane being
+        the midplane
+    magnet_material : openmc.Material
+        Material to fill the magnet with
+    insulation_thickness : float
+        number (cm) for offsetting the magnet nodes outwards in both poloidal
+        and toroidal directions and get the insulation
+        outer surface
+    insulation_material : openmc.Material
+        Material to fill the insulation with
+    case_thickness : float
+        number (cm) for offsetting the magnet nodes further outwards in both poloidal
+        and toroidal directions other than the  insulation thickness and get the case
+        outer surface
+    case_material : openmc.Material
+        Material to fill the case with
+    angle : tuple of two floats, optional
+        The first float is the angle in deg to cut with respect the x axis
+        The second float is the angle in deg to finish the cut, by default None
+    rotation_angle : float, optional
+        number (deg) for rotating the magnet counterclockwise around the z-axis,
+        by default 0
+
+    Returns
+    -------
+    Three Component types
+        TFCoilMagnet, TFCoilInsulation, TFCoilCase
+    """
 
     tf_coil_magnet = TFCoilMagnet(inner_nodes=magnet_inner_nodes, thickness=magnet_thickness,
-                                  material=magnet_material, angle=angle)
+                                  material=magnet_material, angle=angle, rotation_angle=rotation_angle)
 
     tf_coil_insulation = TFCoilInsulation(tf_coil_magnet=tf_coil_magnet, thickness=insulation_thickness,
                                           material=insulation_material, angle=angle)

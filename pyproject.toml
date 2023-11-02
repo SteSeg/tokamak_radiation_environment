@@ -25,5 +25,5 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/tokamak_radiation_environment/radmod"
+"Homepage" = "https://github.com/tokamak_radiation_environment"
 "Bug Tracker" = "https://github.com/SteSeg/tokamak_radiation_environment/issues"
