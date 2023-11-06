@@ -1,10 +1,11 @@
 import openmc
 
-    _material_list = ['dt_plasma', 'tungsten', 'beryllium', 'copper', 'silver', 'PbSn_solder',
-                      'ss304', 'ss316L', 'inconel718', 'nitronic50', 'hastelloy_c276', 'v4cr4ti',
-                      'eurofer97', 'flibe', 'flinak', 'flinabe', 'lithium', 'pbli', 'liflibrnabr',
-                      'liflibrnaf', 'lii', 'lifnafrzf4', 'b4c', 'zrh2', 'zrb', 'wc', 'wb', 'wb4',
-                      'w2b4', 'Fiberglass_type_e', 'nb3sn', 'ybco', 'winding_pack']
+_material_list = ['dt_plasma', 'tungsten', 'beryllium', 'copper', 'silver', 'pbsn',
+                  'ss304', 'ss316L', 'inconel718', 'nitronic50', 'hastelloy_c276',
+                  'v4cr4ti', 'eurofer97', 'flibe', 'flinak', 'flinabe', 'lithium',
+                  'pbli', 'liflibrnabr', 'liflibrnaf', 'lii', 'lifnafrzf4', 'b4c',
+                  'zrh2', 'zrb2', 'wc', 'wb', 'wb4', 'w2b4', 'Fiberglass', 'nb3sn',
+                  'ybco', 'windingpack']
 
 # PLASMA #############################
 dt_plasma = openmc.Material(name='dt_plasma')
@@ -35,7 +36,7 @@ silver.add_element('Ag', 1.0)
 silver.set_density('g/cm3', 10.49)
 
 # PbSn - pure
-pbsn = openmc.Material(name='PbSn_solder')
+pbsn = openmc.Material(name='pbsn')
 pbsn.add_element('Pb', 0.37, percent_type='wo')
 pbsn.add_element('Sn', 0.63, percent_type='wo')
 pbsn.set_density('g/cm3', 8.8)
@@ -210,7 +211,7 @@ zrh2.add_element('H', 2.0)
 zrh2.set_density('g/cm3', 5.56)
 
 # Zirconium Boride (ZrB) - pure
-zrb2 = openmc.Material(name='zrb')
+zrb2 = openmc.Material(name='zrb2')
 zrb2.add_element('Zr', 1.0)
 zrb2.add_element('B', 2.0)
 zrb2.set_density('g/cm3', 6.09)
@@ -241,7 +242,7 @@ wc.set_density('g/cm3', 15.63)
 # SIMPLIFIED MAGNETS
 
 # fiberglass insulation
-fiberglass = openmc.Material(name='Fiberglass_type_e')
+fiberglass = openmc.Material(name='Fiberglass')
 fiberglass.add_element('B', 0.022803, percent_type='wo')
 fiberglass.add_element('O', 0.471950, percent_type='wo')
 fiberglass.add_element('F', 0.004895, percent_type='wo')
@@ -270,7 +271,7 @@ ybco.set_density('g/cm3', 6.3)
 tape = openmc.Material.mix_materials([copper, silver, hastelloy_c276, ybco], [
                                      10/65.35, 3/65.35, 50/65.35, 2.35/65.35], percent_type='vo')
 windingpack = openmc.Material.mix_materials([copper, nitronic50, pbsn, tape], [
-                                            0.163333, 0.603333, 0.030967, 0.202367], percent_type='vo', name="Winding_pack")  # Volume fractions based on talks with magnet team
+                                            0.163333, 0.603333, 0.030967, 0.202367], percent_type='vo', name="Windingpack")  # Volume fractions based on talks with magnet team
 
 
 def list_all():
