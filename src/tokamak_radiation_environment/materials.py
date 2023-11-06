@@ -1,5 +1,11 @@
 import openmc
 
+    _material_list = ['dt_plasma', 'tungsten', 'beryllium', 'copper', 'silver', 'PbSn_solder',
+                      'ss304', 'ss316L', 'inconel718', 'nitronic50', 'hastelloy_c276', 'v4cr4ti',
+                      'eurofer97', 'flibe', 'flinak', 'flinabe', 'lithium', 'pbli', 'liflibrnabr',
+                      'liflibrnaf', 'lii', 'lifnafrzf4', 'b4c', 'zrh2', 'zrb', 'wc', 'wb', 'wb4',
+                      'w2b4', 'Fiberglass_type_e', 'nb3sn', 'ybco', 'winding_pack']
+
 # PLASMA #############################
 dt_plasma = openmc.Material(name='dt_plasma')
 dt_plasma.add_nuclide('H2', 1.0)
@@ -19,17 +25,17 @@ beryllium.add_element('Be', 1.0)
 beryllium.set_density('g/cm3', 1.85)
 
 # Copper (Cu) - pure
-copper = openmc.Material(name='Cu')
+copper = openmc.Material(name='copper')
 copper.add_element('Cu', 1.0)
 copper.set_density('g/cm3', 8.96)
 
 # Silver (Ag) - pure
-silver = openmc.Material(name='Ag')
+silver = openmc.Material(name='silver')
 silver.add_element('Ag', 1.0)
 silver.set_density('g/cm3', 10.49)
 
 # PbSn - pure
-pbsn = openmc.Material(name='PbSn Solder')
+pbsn = openmc.Material(name='PbSn_solder')
 pbsn.add_element('Pb', 0.37, percent_type='wo')
 pbsn.add_element('Sn', 0.63, percent_type='wo')
 pbsn.set_density('g/cm3', 8.8)
@@ -250,7 +256,7 @@ fiberglass.add_element('Fe', 0.002739, percent_type='wo')
 fiberglass.set_density('g/cm3', 2.57)
 
 # Nb3Sn - LTS
-nb3sn = openmc.Material(name='ybco')
+nb3sn = openmc.Material(name='nb3sn')
 nb3sn.add_elements_from_formula('Nb3Sn')
 nb3sn.set_density('g/cm3', 8.74)
 
@@ -264,4 +270,11 @@ ybco.set_density('g/cm3', 6.3)
 tape = openmc.Material.mix_materials([copper, silver, hastelloy_c276, ybco], [
                                      10/65.35, 3/65.35, 50/65.35, 2.35/65.35], percent_type='vo')
 windingpack = openmc.Material.mix_materials([copper, nitronic50, pbsn, tape], [
-                                            0.163333, 0.603333, 0.030967, 0.202367], percent_type='vo', name="Winding pack")  # Volume fractions based on talks with magnet team
+                                            0.163333, 0.603333, 0.030967, 0.202367], percent_type='vo', name="Winding_pack")  # Volume fractions based on talks with magnet team
+
+
+def list_all():
+    """Prints all the material names available in this database.
+    """
+    for m in _material_list:
+        print(m)
