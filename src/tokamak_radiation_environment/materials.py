@@ -10,7 +10,7 @@ dt_plasma.set_density('g/cm3', 1e-5)
 
 # Tungsten (W) - pure
 tungsten = openmc.Material(name='tungsten')
-tungsten.add_element('W', 1.0, 'wo')
+tungsten.add_element('W', 1.0)
 tungsten.set_density('g/cm3', 19.3)
 
 # Beryllium (Be) - pure
