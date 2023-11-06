@@ -1,6 +1,5 @@
 # %%
 import openmc
-import math
 import numpy as np
 import component_nodes as cn
 import tokamak_radiation_environment as tre
@@ -175,7 +174,7 @@ source = openmc.Source()
 source.particle = 'neutron'
 radius = openmc.stats.Discrete([620], [1])
 z_values = openmc.stats.Discrete([0], [1])
-angle = openmc.stats.Uniform(a=math.radians(-10), b=math.radians(10))
+angle = openmc.stats.Uniform(a=np.radians(-10), b=np.radians(10))
 source.space = openmc.stats.CylindricalIndependent(
     r=radius, phi=angle, z=z_values, origin=(0., 0., 0.))
 source.angle = openmc.stats.Isotropic()
@@ -208,12 +207,12 @@ mesh.dimension = [175, 66, 140]
 mesh.lower_left = [122, -165, -700]
 mesh.upper_right = [1178, 165, 700]
 globalmesh_filter = openmc.MeshFilter(mesh)
-# cylindrical mesh
-mesh = openmc.CylindricalMesh()
-mesh.r_grid = [262, 272]
-mesh.z_grid = [-20, 20]
-mesh.phi_grid = (0, math.radians(360))
-mesh.origin = (0., 0., 0.)
+
+# local mesh
+mesh = openmc.RegularMesh()
+mesh.dimension = [1, 1, 1]
+mesh.lower_left = [262, -20, -20]
+mesh.upper_right = [272, 20, 20]
 localmesh_filter = openmc.MeshFilter(mesh)
 
 # energyfilter
