@@ -4,9 +4,10 @@ __pycache__/
 *$py.class
 
 #
+statepoint*
+summary*
 *.xml
 *.pkl
-*.h5
 *.out
 *.png
 *.vtk
