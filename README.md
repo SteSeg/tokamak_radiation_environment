@@ -7,3 +7,7 @@ You need to have [openmc](https://docs.openmc.org/en/stable/usersguide/install.h
 
 ## installation
 ``pip install .``
+
+## More info
+Tutorials are available in the `notebook` folder. 
+Examples of ITER-class and ARC-class reactor models are available in the `reactors` folder.
