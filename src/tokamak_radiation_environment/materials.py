@@ -271,7 +271,7 @@ ybco.set_density('g/cm3', 6.3)
 tape = openmc.Material.mix_materials([copper, silver, hastelloy_c276, ybco], [
                                      10/65.35, 3/65.35, 50/65.35, 2.35/65.35], percent_type='vo')
 windingpack = openmc.Material.mix_materials([copper, nitronic50, pbsn, tape], [
-                                            0.163333, 0.603333, 0.030967, 0.202367], percent_type='vo', name="Windingpack")  # Volume fractions based on talks with magnet team
+                                            0.15, 0.5, 0.05, 0.2], percent_type='vo', name="Windingpack")
 
 
 def list_all():

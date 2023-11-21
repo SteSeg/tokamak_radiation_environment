@@ -248,6 +248,4 @@ tallies = openmc.Tallies([tally3, tally4])
 model = openmc.Model(materials=materials, geometry=geometry,
                      settings=settings, tallies=tallies)
 
-model.export_to_model_xml()
-
 model.run(threads=8, geometry_debug=True)
