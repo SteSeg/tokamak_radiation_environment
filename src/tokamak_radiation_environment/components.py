@@ -1,4 +1,5 @@
 from abc import ABC
+import typing
 import openmc
 
 
@@ -117,8 +118,8 @@ class Plasma(Component):
         return openmc.Cell(region=self.region, fill=self.material)
 
 
-class VacuumVessel(Component):
-    def __init__(self, inner_nodes, thickness: float, material: openmc.Material, angle=None):
+class FirstWall(Component):
+    def __init__(self, inner_nodes, thickness: str, material: openmc.Material, angle=None):
         super().__init__()
 
         self.inner_nodes = inner_nodes
@@ -153,11 +154,11 @@ class VacuumVessel(Component):
 
 class SOLVacuum(Component):
 
-    def __init__(self, plasma: Plasma, vacuum_vessel: VacuumVessel, material: openmc.Material = None, angle=None):
+    def __init__(self, plasma: Plasma, first_wall: FirstWall, material: openmc.Material = None, angle=None):
         super().__init__()
 
         self.plasma = plasma
-        self.vacuum_vessel = vacuum_vessel
+        self.first_wall = first_wall
         self.material = material
         self.angle = angle
 
@@ -165,7 +166,7 @@ class SOLVacuum(Component):
     def surfaces(self):
 
         sol_inner_surface = self.plasma.surfaces
-        sol_outer_surface = self.vacuum_vessel.surfaces[0]
+        sol_outer_surface = self.first_wall.surfaces[0]
 
         return sol_inner_surface, sol_outer_surface
 
@@ -184,8 +185,141 @@ class SOLVacuum(Component):
         return openmc.Cell(region=self.region, fill=self.material)
 
 
+class VesselInnerStructure(Component):
+    def __init__(self, first_wall: FirstWall, thickness: str, material: openmc.Material, angle=None):
+        super().__init__()
+
+        self.first_wall = first_wall
+        self.thickness = thickness
+        self.material = material
+        self.angle = angle
+
+    @property
+    def surfaces(self):
+
+        inner_surface = self.first_wall.surfaces[-1]
+        outer_surface = openmc.model.Polygon(
+            self.inner_nodes, basis="rz").offset(self.thickness)
+
+        return inner_surface, outer_surface
+
+    @property
+    def region(self):
+
+        _region = -(self.surfaces[1]) & +(self.surfaces[0])
+
+        _region = _add_boundaries(_region, self.angle)
+
+        return _region
+
+    @property
+    def cell(self):
+
+        return openmc.Cell(region=self.region, fill=self.material)
+
+
+class VesselCoolingChannel(Component):
+    def __init__(self, vessel_inner_structure: VesselInnerStructure, thickness: str, material: openmc.Material, angle=None):
+        super().__init__()
+
+        self.vessel_inner_structure = vessel_inner_structure
+        self.thickness = thickness
+        self.material = material
+        self.angle = angle
+
+    @property
+    def surfaces(self):
+
+        inner_surface = self.vessel_inner_structure.surfaces[-1]
+        outer_surface = openmc.model.Polygon(
+            self.inner_nodes, basis="rz").offset(self.thickness)
+
+        return inner_surface, outer_surface
+
+    @property
+    def region(self):
+
+        _region = -(self.surfaces[1]) & +(self.surfaces[0])
+
+        _region = _add_boundaries(_region, self.angle)
+
+        return _region
+
+    @property
+    def cell(self):
+
+        return openmc.Cell(region=self.region, fill=self.material)
+
+
+class VesselNeutronMultiplier(Component):
+    def __init__(self, vessel_cooling_channel: VesselCoolingChannel, thickness: str, material: openmc.Material, angle=None):
+        super().__init__()
+
+        self.vessel_cooling_channel = vessel_cooling_channel
+        self.thickness = thickness
+        self.material = material
+        self.angle = angle
+
+    @property
+    def surfaces(self):
+
+        inner_surface = self.vessel_cooling_channel.surfaces[-1]
+        outer_surface = openmc.model.Polygon(
+            self.inner_nodes, basis="rz").offset(self.thickness)
+
+        return inner_surface, outer_surface
+
+    @property
+    def region(self):
+
+        _region = -(self.surfaces[1]) & +(self.surfaces[0])
+
+        _region = _add_boundaries(_region, self.angle)
+
+        return _region
+
+    @property
+    def cell(self):
+
+        return openmc.Cell(region=self.region, fill=self.material)
+
+
+class VesselOuterStructure(Component):
+    def __init__(self, vessel_neutron_multiplier: typing.Union[VesselNeutronMultiplier, VesselCoolingChannel], thickness: str, material: openmc.Material, angle=None):
+        super().__init__()
+
+        self.vessel_neutron_multiplier = vessel_neutron_multiplier
+        self.thickness = thickness
+        self.material = material
+        self.angle = angle
+
+    @property
+    def surfaces(self):
+
+        inner_surface = self.vessel_neutron_multiplier.surfaces[-1]
+        outer_surface = openmc.model.Polygon(
+            self.inner_nodes, basis="rz").offset(self.thickness)
+
+        return inner_surface, outer_surface
+
+    @property
+    def region(self):
+
+        _region = -(self.surfaces[1]) & +(self.surfaces[0])
+
+        _region = _add_boundaries(_region, self.angle)
+
+        return _region
+
+    @property
+    def cell(self):
+
+        return openmc.Cell(region=self.region, fill=self.material)
+
+
 class Blanket(Component):
-    def __init__(self, vacuum_vessel: VacuumVessel, thickness: float, material: openmc.Material, nodes=None, angle=None):
+    def __init__(self, vacuum_vessel: typing.Union[VesselInnerStructure, VesselOuterStructure],
+                 thickness: float, material: openmc.Material, nodes=None, angle=None):
         super().__init__()
 
         self.vacuum_vessel = vacuum_vessel
@@ -197,12 +331,12 @@ class Blanket(Component):
     @property
     def surfaces(self):
 
-        inner_surface = self.vacuum_vessel.surfaces[1]
+        inner_surface = self.vacuum_vessel.surfaces[-1]
 
         if self.nodes:
             outer_surface = openmc.model.Polygon(self.nodes, basis="rz")
         else:
-            outer_surface = self.vacuum_vessel.surfaces[1].offset(
+            outer_surface = self.vacuum_vessel.surfaces[-1].offset(
                 self.thickness)
 
         return inner_surface, outer_surface
@@ -435,7 +569,7 @@ class TFCoilInsulation(Component):
 
 
 class TFCoilCase(Component):
-    def __init__(self, tf_coil_magnet: TFCoilMagnet, thickness: float, material: openmc.Material, tf_coil_insulation: PFCoilInsulation = None, angle=None):
+    def __init__(self, tf_coil_magnet: TFCoilMagnet, thickness: float, material: openmc.Material, tf_coil_insulation: TFCoilInsulation = None, angle=None):
         super().__init__()
 
         self.tf_coil_magnet = tf_coil_magnet
@@ -477,7 +611,7 @@ class TFCoilCase(Component):
             (self.surfaces[2]) & -(self.surfaces[3]) & + \
             (self.surfaces[4]) & ~(self.tf_coil_magnet.region)
 
-        if self. tf_coil_insulation:
+        if self.tf_coil_insulation:
             _region = _region & ~(self.tf_coil_insulation.region)
 
         _region = _add_boundaries(_region, self.angle)
@@ -491,7 +625,11 @@ class TFCoilCase(Component):
 
 
 def core_group(plasma_outer_nodes, plasma_material: openmc.Material,
-               vessel_inner_nodes, vessel_thickness: float, vessel_material: openmc.Material,
+               firstwall_inner_nodes, firstwall_thickness: float, firstwall_material: openmc.Material,
+               vv_stri_thickness: float, vv_stri_material: openmc.Material,
+               vv_channel_thickness: float, vv_channel_material: openmc.Material,
+               vv_multiplier_thickness: float, vv_multiplier_material: openmc.Material,
+               vv_stro_thickness: float, vv_stro_material: openmc.Material,
                blanket_thickness: float, blanket_material: openmc.Material,
                shield_thickness: float, shield_material: openmc.Material,
                angle=None):
@@ -532,19 +670,26 @@ def core_group(plasma_outer_nodes, plasma_material: openmc.Material,
     plasma = Plasma(outer_nodes=plasma_outer_nodes,
                     material=plasma_material, angle=angle)
 
-    vacuum_vessel = VacuumVessel(inner_nodes=vessel_inner_nodes, thickness=vessel_thickness,
-                                 material=vessel_material, angle=angle)
+    first_wall = FirstWall(inner_nodes=firstwall_inner_nodes,
+                           thickness=firstwall_thickness, material=firstwall_material, angle=angle)
+    vessel_inner_structure = VesselInnerStructure(
+        first_wall=first_wall, thickness=vv_stri_thickness, material=vv_stri_material, angle=angle)
+    vessel_cooling_channel = VesselCoolingChannel(
+        vessel_inner_structure=vessel_inner_structure, thickness=vv_channel_thickness, material=vv_channel_material, angle=angle)
+    vessel_neutron_multiplier = VesselNeutronMultiplier(
+        vessel_cooling_channel=vessel_cooling_channel, thickness=vv_multiplier_thickness, material=vv_multiplier_material, angle=angle)
+    vessel_outer_structure = VesselOuterStructure(
+        vessel_neutron_multiplier=vessel_neutron_multiplier, thickness=vv_multiplier_thickness, material=vv_multiplier_material, angle=angle)
 
-    sol = SOLVacuum(
-        plasma=plasma, vacuum_vessel=vacuum_vessel, angle=angle)
+    sol = SOLVacuum(plasma=plasma, first_wall=first_wall,
+                    material=None, angle=angle)
 
-    blanket = Blanket(vacuum_vessel=vacuum_vessel, thickness=blanket_thickness,
-                      material=blanket_material, angle=angle)
+    blanket = Blanket()
 
     shield = Shield(blanket=blanket, thickness=shield_thickness,
                     material=shield_material, angle=angle)
 
-    return plasma, sol, vacuum_vessel, blanket, shield
+    return plasma, sol, first_wall, vessel_inner_structure, vessel_cooling_channel, vessel_neutron_multiplier, vessel_outer_structure, blanket, shield
 
 
 def pfcoil_group(magnet_nodes, magnet_material: openmc.Material,
