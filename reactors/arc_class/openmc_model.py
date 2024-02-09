@@ -7,6 +7,8 @@ import tokamak_radiation_environment as tre
 # define materials
 
 dt_plasma = tre.materials.dt_plasma
+tungsten = tre.materials.tungsten
+beryllium = tre.materials.beryllium
 eurofer = tre.materials.eurofer97
 flibe = tre.materials.flibe
 ss304 = tre.materials.ss304
@@ -30,9 +32,13 @@ angle = (-10, 10)
 # components
 
 # core
-plasma, sol, vacuum_vessel, blanket, shield = tre.components.core_group(
+plasma, sol, first_wall, vessel_inner_structure, vessel_cooling_channel, vessel_neutron_multiplier, vessel_outer_structure, blanket, shield = tre.components.core_group(
     plasma_outer_nodes=cn.plasma_out, plasma_material=dt_plasma,
-    vessel_inner_nodes=cn.vessel_in, vessel_thickness=5., vessel_material=eurofer,
+    firstwall_inner_nodes=cn.fw_in, firstwall_thickness=.1, firstwall_material=tungsten,
+    vv_stri_thickness=1., vv_stri_material=eurofer,
+    vv_channel_thickness=2., vv_channel_material=flibe,
+    vv_multiplier_thickness=1., vv_multiplier_material=beryllium,
+    vv_stro_thickness=3., vv_stro_material=eurofer,
     blanket_thickness=45, blanket_material=flibe,
     shield_thickness=20, shield_material=ss304,
     angle=angle)
@@ -131,7 +137,7 @@ cs_l3_magnet, cs_l3_insulation, cs_l3_case = tre.components.pfcoil_group(
     angle=angle)
 
 
-reactor_components = [plasma, sol, vacuum_vessel, blanket, shield,
+reactor_components = [plasma, sol, first_wall, vessel_inner_structure, vessel_cooling_channel, vessel_neutron_multiplier, vessel_outer_structure, blanket, shield,
                       cs_u1_magnet, cs_u1_insulation, cs_u1_case, cs_u2_magnet, cs_u2_insulation, cs_u2_case, cs_u3_magnet, cs_u3_insulation, cs_u3_case,
                       cs_l1_magnet, cs_l1_insulation, cs_l1_case, cs_l2_magnet, cs_l2_insulation, cs_l2_case, cs_l3_magnet, cs_l3_insulation, cs_l3_case,
                       pf_u1_magnet, pf_u1_insulation, pf_u1_case, pf_u2_magnet, pf_u2_insulation, pf_u2_case, pf_u3_magnet, pf_u3_insulation, pf_u3_case,
@@ -146,7 +152,8 @@ for rc in reactor_components:
     enclosure_region = enclosure_region & ~(rc.region)
 enclosure_cell = openmc.Cell(region=enclosure_region, fill=None)
 
-root = [plasma.cell, vacuum_vessel.cell, sol.cell, blanket.cell, shield.cell,
+root = [plasma.cell, sol.cell, first_wall.cell, vessel_inner_structure.cell, vessel_cooling_channel.cell,
+        vessel_neutron_multiplier.cell, vessel_outer_structure.cell, blanket.cell, shield.cell,
         cs_u1_magnet.cell, cs_u1_insulation.cell, cs_u1_case.cell, cs_u2_magnet.cell, cs_u2_insulation.cell, cs_u2_case.cell,
         cs_u3_magnet.cell, cs_u3_insulation.cell, cs_u3_case.cell, cs_l1_magnet.cell, cs_l1_insulation.cell, cs_l1_case.cell,
         cs_l2_magnet.cell, cs_l2_insulation.cell, cs_l2_case.cell, cs_l3_magnet.cell, cs_l3_insulation.cell, cs_l3_case.cell,
