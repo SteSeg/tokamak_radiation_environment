@@ -631,36 +631,63 @@ def core_group(plasma_outer_nodes, plasma_material: openmc.Material,
                angle=None):
     """This function allows do directly generate all the Core components in one call
 
+
     Parameters
     ----------
-    plasma_outer_nodes : Iterable of tuples
+    plasma_outer_nodes :  Iterable of tuples
         List of (r,z) coordinates for the plasma cell outer surface
     plasma_material : openmc.Material
-        Material to fill the plasma with
-    vessel_inner_nodes : Iterable of tuples
-        List of (r,z) coordinates for the vessel cell inner surface
-    vessel_thickness : float
-        number (cm) for offsetting the vessel nodes outwards and get the vessel outer surface
-    vessel_material : openmc.Material
-        Material to fill the vessel with
+         Material to fill the plasma component with
+    firstwall_inner_nodes :  Iterable of tuples
+        List of (r,z) coordinates for the first wall cell inner surface
+    firstwall_thickness : float
+        number (cm) for offsetting the first wall inner nodes further outwards to create the first
+        wall outer surface (as well as the vessel inner structure inner surface)
+    firstwall_material : openmc.Material
+        Material to fill the first wall component with
+    vv_stri_thickness : float
+        number (cm) for offsetting the first wall inner nodes further outwards to create the 
+        vessel inner structure outer nodes (gets added on top of the firstwall_thickness)
+    vv_stri_material : openmc.Material
+        Material to fill the vessel inner structure component with
+    vv_channel_thickness : float
+        number (cm) for offsetting first wall inner nodes further outwards to create the cooling
+        channel outer surface (gets added on top of the firstwall_thickness and vv_stri_thickness)
+    vv_channel_material : openmc.Material
+        Material to fill the vessel cooling channel component with
+    vv_multiplier_thickness : float
+        number (cm) for offsetting the first wall inner nodes further outwards to create the neutron
+        multiplier outer surface (gets added on top of the firstwall_thickness, vv_stri_thickness and
+        the vv_channel_thickness)
+    vv_multiplier_material : openmc.Material
+        Material to fill the neutron multiplier component with
+    vv_stro_thickness : float
+        number (cm) for offsetting the first wall inner nodes further outwards to create the vessel 
+        outer structure outer surface (gets added on top of the firstwall_thickness, vv_stri_thickness, 
+        the vv_channel_thickness and the vv_multiplier_thickness)
+    vv_stro_material : openmc.Material
+        Material to fill the vessel outer structure component with
     blanket_thickness : float
-        number (cm) for offsetting the vessel nodes further outwards other than the vessel
-        thickness itself and get the blanket outer surface
+        number (cm) for offsetting the first wall inner nodes further outwards to create the blanket
+        outer surface (gets added on top of the firstwall_thickness, vv_stri_thickness, the 
+        vv_channel_thickness, the vv_multiplier_thickness and the vv_stro_thickness)
     blanket_material : openmc.Material
-        Material to fill the blanket with
+        Material to fill the blanket component with
     shield_thickness : float
-        number (cm) for offsetting the vessel nodes further outwards other than the vessel
-        and blanket thickness itself and get the shield outer surface
+        number (cm) for offsetting the first wall inner nodes further outwards to create the shield outer 
+        surface (gets added on top of the firstwall_thickness, vv_stri_thickness, the vv_channel_thickness,
+        the vv_multiplier_thickness, the vv_stro_thickness and the blanket_thickness)
     shield_material : openmc.Material
-        Material to fill the shield with
+        Material to fill the shield component with
     angle : tuple of two floats, optional
         The first float is the angle in deg to cut with respect the x axis
         The second float is the angle in deg to finish the cut, by default None
 
     Returns
     -------
-    Four Component types
-        Plasma, VacuumVessel, SOLVacuum, Blanket, Shield
+    list of nine Component types
+    Plasma, SOLVacuum, FirstWall, VesselInnerStructure, VesselCoolingChannel, VesselNeutronMultiplier, 
+    VesselOuterStructure, Blanket, Shield
     """
 
     plasma = Plasma(outer_nodes=plasma_outer_nodes,
@@ -717,7 +744,7 @@ def pfcoil_group(magnet_nodes, magnet_material: openmc.Material,
 
     Returns
     -------
-    Three Component types
+    list of three Component types
     PFCoilMagnet, PFCoilInsulation, PFCoilCase
     """
 
@@ -770,7 +797,7 @@ def tfcoil_group(magnet_inner_nodes, magnet_thickness: float, magnet_material: o
 
     Returns
     -------
-    Three Component types
+    list of three Component types
         TFCoilMagnet, TFCoilInsulation, TFCoilCase
     """
 
