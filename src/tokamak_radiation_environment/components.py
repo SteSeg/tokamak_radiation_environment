@@ -198,8 +198,7 @@ class VesselInnerStructure(Component):
     def surfaces(self):
 
         inner_surface = self.first_wall.surfaces[-1]
-        outer_surface = openmc.model.Polygon(
-            self.inner_nodes, basis="rz").offset(self.thickness)
+        outer_surface = inner_surface.offset(self.thickness)
 
         return inner_surface, outer_surface
 
@@ -231,8 +230,7 @@ class VesselCoolingChannel(Component):
     def surfaces(self):
 
         inner_surface = self.vessel_inner_structure.surfaces[-1]
-        outer_surface = openmc.model.Polygon(
-            self.inner_nodes, basis="rz").offset(self.thickness)
+        outer_surface = inner_surface.offset(self.thickness)
 
         return inner_surface, outer_surface
 
@@ -264,8 +262,7 @@ class VesselNeutronMultiplier(Component):
     def surfaces(self):
 
         inner_surface = self.vessel_cooling_channel.surfaces[-1]
-        outer_surface = openmc.model.Polygon(
-            self.inner_nodes, basis="rz").offset(self.thickness)
+        outer_surface = inner_surface.offset(self.thickness)
 
         return inner_surface, outer_surface
 
@@ -297,8 +294,7 @@ class VesselOuterStructure(Component):
     def surfaces(self):
 
         inner_surface = self.vessel_neutron_multiplier.surfaces[-1]
-        outer_surface = openmc.model.Polygon(
-            self.inner_nodes, basis="rz").offset(self.thickness)
+        outer_surface = inner_surface.offset(self.thickness)
 
         return inner_surface, outer_surface
 
@@ -679,12 +675,13 @@ def core_group(plasma_outer_nodes, plasma_material: openmc.Material,
     vessel_neutron_multiplier = VesselNeutronMultiplier(
         vessel_cooling_channel=vessel_cooling_channel, thickness=vv_multiplier_thickness, material=vv_multiplier_material, angle=angle)
     vessel_outer_structure = VesselOuterStructure(
-        vessel_neutron_multiplier=vessel_neutron_multiplier, thickness=vv_multiplier_thickness, material=vv_multiplier_material, angle=angle)
+        vessel_neutron_multiplier=vessel_neutron_multiplier, thickness=vv_stro_thickness, material=vv_stro_material, angle=angle)
 
     sol = SOLVacuum(plasma=plasma, first_wall=first_wall,
                     material=None, angle=angle)
 
-    blanket = Blanket()
+    blanket = Blanket(vacuum_vessel=vessel_outer_structure, thickness=blanket_thickness,
+                      material=blanket_material, nodes=None, angle=angle)
 
     shield = Shield(blanket=blanket, thickness=shield_thickness,
                     material=shield_material, angle=angle)
