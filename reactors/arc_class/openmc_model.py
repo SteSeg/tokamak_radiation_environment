@@ -20,7 +20,7 @@ windingpack = tre.materials.windingpack
 fiberglass = tre.materials.fiberglass
 
 materials = openmc.Materials(
-    [dt_plasma, flibe, wc, eurofer, ss304, windingpack, fiberglass, ss316L])
+    [dt_plasma, tungsten, beryllium, flibe, wc, eurofer, ss304, windingpack, fiberglass, ss316L])
 
 # %%
 
