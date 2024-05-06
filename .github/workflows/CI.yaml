@@ -36,11 +36,11 @@ jobs:
 
     - name: Test with PyTest
       run: |
-        python -m pytest --cov=fusion_toolbox tests/
+        python -m pytest --cov=tokamak_radiation_environment/
 
     - name: Check style with Pylint
       run: |
-        python3 -m pylint --fail-under=0 --reports=y fusion_toolbox
+        python3 -m pylint --fail-under=0 --reports=y tokamak_radiation_environment
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
       env:
