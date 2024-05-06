@@ -1,0 +1,47 @@
+name: CI
+
+# We can specify which Github events will trigger a CI build
+on: [push, pull_request]
+
+# now define a single job 'build' (but could define more)
+jobs:
+
+  build:
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10", "3.11"]
+
+    runs-on: ${{ matrix.os }}
+
+    # a job is a seq of steps
+    steps:
+
+    # Next we need to checkout out repository, and set up Python
+    # A 'name' is just an optional label shown in the log - helpful to clarify progress - and can be anything
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install -r requirements.txt
+
+
+    - name: Test with PyTest
+      run: |
+        python -m pytest --cov=fusion_toolbox tests/
+
+    - name: Check style with Pylint
+      run: |
+        python3 -m pylint --fail-under=0 --reports=y fusion_toolbox
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
